@@ -130,7 +130,7 @@ const ui = StyleSheet.create({
   rotulo: { fontSize: 14, fontWeight: '700', color: cores.texto },
   dica: { fontSize: 12, color: cores.muted },
   input: { color: cores.texto, backgroundColor: '#FCFBF7', borderWidth: 1, borderColor: cores.borda, borderRadius: 12, padding: 14, minHeight: 50, fontSize: 16 },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 30, borderWidth: 1, borderColor: cores.borda, backgroundColor: cores.papel },
+  chip: { alignSelf: 'flex-start', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 30, borderWidth: 1, borderColor: cores.borda, backgroundColor: cores.papel },
   chipAtivo: { backgroundColor: cores.verde, borderColor: cores.verde },
   chipTexto: { color: cores.texto, fontSize: 13, fontWeight: '700' },
   aviso: { padding: 14, backgroundColor: cores.vermelhoClaro, borderRadius: 12 },
