@@ -1,31 +1,46 @@
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { ICONES_TIPO } from '../services/dadosFicticios.js';
-import { cores, moeda } from './ui.js';
+import { StyleSheet, Text, View } from 'react-native';
+import { Cartao, Icone } from './ui/index.js';
+import { iconeDoTipo } from '../constants/negocio.js';
+import { moeda } from '../utils/formatadores.js';
+import { cores, espaco, raio } from '../theme/tema.js';
 
 export default function CartaoMaquina({ maquina, onPress }) {
-  return <Pressable accessibilityRole="button" onPress={onPress}
-    style={function estilo({ pressed }) { return [css.cartao, pressed && { opacity: 0.7 }]; }}>
-    <View style={css.icone}><Text style={{ fontSize: 30 }}>{ICONES_TIPO[maquina.tipo] || '🚜'}</Text></View>
-    <View style={{ flex: 1, gap: 3 }}>
+  return <Cartao onPress={onPress} rotulo={'Ver ' + maquina.nome} style={css.cartao}>
+    <View style={css.imagem}>
+      <Icone nome={iconeDoTipo(maquina.tipo)} tamanho={34} cor={cores.terra} />
+    </View>
+    <View style={css.info}>
+      <Text style={css.tipo}>{maquina.tipo}</Text>
       <Text style={css.nome} numberOfLines={1}>{maquina.nome}</Text>
-      <Text style={css.local}>📍 {maquina.cidade}, RS • {maquina.tipo}</Text>
+      <View style={css.local}>
+        <Icone nome="map-marker-outline" tamanho={14} cor={cores.textoSuave} />
+        <Text style={css.localTexto} numberOfLines={1}>{maquina.cidade}, RS</Text>
+        {maquina.comOperador && <><Text style={css.ponto}>•</Text><Text style={css.localTexto}>com operador</Text></>}
+      </View>
       <View style={css.rodape}>
-        <Text style={css.preco}>{moeda(maquina.precoHora)}<Text style={css.porHora}> / hora</Text></Text>
-        <Text style={[css.disponivel, !maquina.disponivel && { color: cores.vermelho }]}>
-          {maquina.disponivel ? '● Disponível' : '● Indisponível'}
-        </Text>
+        <Text style={css.preco}>{moeda(maquina.precoHora)}<Text style={css.porHora}> /hora</Text></Text>
+        <View style={[css.situacao, !maquina.disponivel && { backgroundColor: cores.erroClaro }]}>
+          <View style={[css.bolinha, !maquina.disponivel && { backgroundColor: cores.erro }]} />
+          <Text style={[css.situacaoTexto, !maquina.disponivel && { color: cores.erro }]}>{maquina.disponivel ? 'Disponível' : 'Indisponível'}</Text>
+        </View>
       </View>
     </View>
-  </Pressable>;
+  </Cartao>;
 }
 
 const css = StyleSheet.create({
-  cartao: { flexDirection: 'row', gap: 14, alignItems: 'center', backgroundColor: cores.papel, borderWidth: 1, borderColor: cores.borda, borderRadius: 18, padding: 14 },
-  icone: { width: 64, height: 64, borderRadius: 16, backgroundColor: cores.terraClara, alignItems: 'center', justifyContent: 'center' },
+  cartao: { flexDirection: 'row', alignItems: 'center', padding: espaco.md + 2, gap: espaco.md + 2 },
+  imagem: { width: 78, height: 78, borderRadius: raio.lg, backgroundColor: cores.terraClara, alignItems: 'center', justifyContent: 'center' },
+  info: { flex: 1, gap: 2 },
+  tipo: { color: cores.terra, fontSize: 11, fontWeight: '800', letterSpacing: 1, textTransform: 'uppercase' },
   nome: { color: cores.texto, fontSize: 16, fontWeight: '800' },
-  local: { color: cores.muted, fontSize: 13 },
-  rodape: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, flexWrap: 'wrap', gap: 6 },
-  preco: { color: cores.verde, fontSize: 16, fontWeight: '900' },
-  porHora: { color: cores.muted, fontSize: 12, fontWeight: '600' },
-  disponivel: { color: cores.verde, fontSize: 12, fontWeight: '700' },
+  local: { flexDirection: 'row', alignItems: 'center', gap: 3 },
+  localTexto: { color: cores.textoSuave, fontSize: 13 },
+  ponto: { color: cores.textoClaro, marginHorizontal: 2 },
+  rodape: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6, gap: 6, flexWrap: 'wrap' },
+  preco: { color: cores.verde, fontSize: 17, fontWeight: '900' },
+  porHora: { color: cores.textoSuave, fontSize: 12, fontWeight: '600' },
+  situacao: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: cores.sucessoClaro, paddingHorizontal: 8, paddingVertical: 3, borderRadius: raio.pilula },
+  bolinha: { width: 7, height: 7, borderRadius: 4, backgroundColor: cores.sucesso },
+  situacaoTexto: { color: cores.sucesso, fontSize: 11, fontWeight: '800' },
 });

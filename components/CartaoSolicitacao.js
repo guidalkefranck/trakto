@@ -1,29 +1,68 @@
 import { StyleSheet, Text, View } from 'react-native';
-import { ICONES_TIPO } from '../services/dadosFicticios.js';
-import { Painel, SeloStatus, cores, estilos, moeda } from './ui.js';
+import LinhaDoTempo from './LinhaDoTempo.js';
+import { Avatar, Cartao, Icone, SeloStatus } from './ui/index.js';
+import { iconeDoTipo } from '../constants/negocio.js';
+import { moeda } from '../utils/formatadores.js';
+import { cores, espaco, raio } from '../theme/tema.js';
 
-// Mostra uma solicitação de aluguel. As ações (botões) chegam como children,
-// porque mudam conforme quem está vendo: produtor ou proprietário.
+// Uma solicitação de aluguel. Os botões de ação chegam como children porque
+// mudam conforme quem está vendo (produtor, proprietário ou admin).
 export default function CartaoSolicitacao({ solicitacao, maquina, pessoa, rotuloPessoa, children = null }) {
-  return <Painel>
+  const contatoLiberado = (solicitacao.status === 'aceita' || solicitacao.status === 'concluida') && pessoa;
+  return <Cartao>
     <View style={css.topo}>
-      <Text style={{ fontSize: 26 }}>{maquina ? ICONES_TIPO[maquina.tipo] : '🚜'}</Text>
-      <View style={{ flex: 1 }}>
+      <View style={css.icone}><Icone nome={maquina ? iconeDoTipo(maquina.tipo) : 'tractor'} tamanho={24} cor={cores.terra} /></View>
+      <View style={{ flex: 1, gap: 2 }}>
         <Text style={css.nome} numberOfLines={1}>{maquina ? maquina.nome : 'Máquina removida'}</Text>
-        <Text style={estilos.subtitulo}>📅 {solicitacao.data} • {solicitacao.horas} h • {moeda(solicitacao.valorTotal)}</Text>
+        <Text style={css.pedido}>Pedido #{String(solicitacao.id).padStart(4, '0')}</Text>
       </View>
       <SeloStatus status={solicitacao.status} />
     </View>
-    {pessoa && <Text style={estilos.subtitulo}>{rotuloPessoa}: <Text style={{ color: cores.texto, fontWeight: '700' }}>{pessoa.nome}</Text> ({pessoa.cidade})</Text>}
-    {!!solicitacao.observacao && <Text style={[estilos.texto, css.obs]}>“{solicitacao.observacao}”</Text>}
-    {solicitacao.status === 'aceita' && pessoa && <Text style={css.contato}>📞 Contato liberado: {pessoa.telefone}</Text>}
+
+    <View style={css.dados}>
+      <Dado icone="calendar-blank-outline" texto={solicitacao.data} />
+      <Dado icone="timer-outline" texto={solicitacao.horas + ' h'} />
+      <Dado icone="cash" texto={moeda(solicitacao.valorTotal)} destaque />
+    </View>
+
+    {!!solicitacao.observacao && <Text style={css.obs}>“{solicitacao.observacao}”</Text>}
+
+    <LinhaDoTempo status={solicitacao.status} />
+
+    {pessoa && <View style={css.pessoa}>
+      <Avatar nome={pessoa.nome} tamanho={34} />
+      <View style={{ flex: 1 }}>
+        <Text style={css.pessoaRotulo}>{rotuloPessoa}</Text>
+        <Text style={css.pessoaNome}>{pessoa.nome} · {pessoa.cidade}</Text>
+      </View>
+      {contatoLiberado
+        ? <View style={css.contato}><Icone nome="whatsapp" tamanho={16} cor={cores.sucesso} /><Text style={css.contatoTexto}>{pessoa.telefone}</Text></View>
+        : <Icone nome="lock-outline" tamanho={18} cor={cores.textoClaro} />}
+    </View>}
+
     {children}
-  </Painel>;
+  </Cartao>;
+}
+
+function Dado({ icone, texto, destaque = false }) {
+  return <View style={css.dado}>
+    <Icone nome={icone} tamanho={16} cor={destaque ? cores.verde : cores.textoSuave} />
+    <Text style={[css.dadoTexto, destaque && { color: cores.verde, fontWeight: '900' }]}>{texto}</Text>
+  </View>;
 }
 
 const css = StyleSheet.create({
-  topo: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  topo: { flexDirection: 'row', alignItems: 'center', gap: espaco.md },
+  icone: { width: 46, height: 46, borderRadius: 14, backgroundColor: cores.terraClara, alignItems: 'center', justifyContent: 'center' },
   nome: { color: cores.texto, fontSize: 16, fontWeight: '800' },
-  obs: { backgroundColor: cores.fundo, borderRadius: 10, padding: 10, fontStyle: 'italic' },
-  contato: { color: cores.verde, fontWeight: '800' },
+  pedido: { color: cores.textoClaro, fontSize: 12, fontWeight: '600' },
+  dados: { flexDirection: 'row', flexWrap: 'wrap', gap: espaco.lg, paddingVertical: 2 },
+  dado: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  dadoTexto: { color: cores.texto, fontSize: 14, fontWeight: '600' },
+  obs: { backgroundColor: cores.fundo, borderRadius: raio.md, padding: espaco.md, color: cores.textoSuave, fontStyle: 'italic', lineHeight: 20 },
+  pessoa: { flexDirection: 'row', alignItems: 'center', gap: espaco.sm + 2, paddingTop: espaco.md, borderTopWidth: 1, borderTopColor: cores.borda },
+  pessoaRotulo: { color: cores.textoClaro, fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.8 },
+  pessoaNome: { color: cores.texto, fontSize: 14, fontWeight: '700' },
+  contato: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: cores.sucessoClaro, paddingHorizontal: 8, paddingVertical: 4, borderRadius: raio.pilula },
+  contatoTexto: { color: cores.sucesso, fontSize: 12, fontWeight: '800' },
 });
