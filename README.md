@@ -7,6 +7,10 @@ Aplicação mobile (React Native + Expo) que conecta **pequenos produtores rurai
 **Autor:** Guilherme Dalke — 3º ano do Ensino Médio Técnico
 **Projeto Avaliativo:** Aplicação Mobile com JWT e Níveis de Usuário
 
+![React Native](https://img.shields.io/badge/React%20Native-0.88-2E5B34) ![Expo](https://img.shields.io/badge/Expo-SDK%2058-2E5B34) ![React Navigation](https://img.shields.io/badge/React%20Navigation-7-E8A93A) ![Status](https://img.shields.io/badge/Entrega-1%20de%204-8B5E3C)
+
+> 📄 **Documento completo da proposta** — personas, requisitos funcionais e não funcionais, regras de negócio, modelo de dados e rotas da API: **[docs/PROPOSTA.md](docs/PROPOSTA.md)**
+
 | Entrega | Conteúdo | Situação |
 |---|---|---|
 | 1 | Proposta, estrutura inicial, telas e navegação | ✅ Entregue |
@@ -80,6 +84,7 @@ Produtor solicita ──► PENDENTE ──► Proprietário aceita ──► AC
 | Gerenciar usuários e alterar níveis | — | — | ✅ |
 
 - No cadastro público o usuário escolhe entre **Produtor** e **Proprietário**. O nível **Admin** só pode ser concedido por outro administrador.
+- As regras estão centralizadas em **[`constants/permissoes.js`](constants/permissoes.js)** (`pode(usuario, acao)` e `podeAlterarMaquina`) e são usadas tanto pela navegação quanto pelas telas.
 - Na Entrega 3, cada permissão será **validada no back-end** (middleware que lê o JWT enviado como *Bearer Token* e confere o nível e o dono do registro). Esconder botões no app é apenas visual.
 
 ## 6. Principais funcionalidades
@@ -98,17 +103,17 @@ Produtor solicita ──► PENDENTE ──► Proprietário aceita ──► AC
 
 | # | Tela | Arquivo | Quem acessa |
 |---|---|---|---|
-| 1 | Login | `screens/Login.js` | público |
-| 2 | Criar conta | `screens/CadastroUsuario.js` | público |
-| 3 | Início (painel por nível) | `screens/Home.js` | todos logados |
-| 4 | Máquinas disponíveis (busca e filtros) | `screens/Maquinas.js` | todos logados |
-| 5 | Detalhes da máquina | `screens/DetalhesMaquina.js` | todos logados |
-| 6 | Solicitar aluguel | `screens/SolicitarAluguel.js` | produtor |
-| 7 | Minhas solicitações | `screens/MinhasSolicitacoes.js` | produtor |
-| 8 | Minhas máquinas | `screens/MinhasMaquinas.js` | proprietário |
-| 9 | Cadastrar / editar máquina | `screens/FormularioMaquina.js` | proprietário, admin |
-| 10 | Solicitações recebidas | `screens/SolicitacoesRecebidas.js` | proprietário, admin |
-| 11 | Gerenciar usuários | `screens/Usuarios.js` | admin |
+| 1 | Login | `screens/publico/Login.js` | público |
+| 2 | Criar conta | `screens/publico/CadastroUsuario.js` | público |
+| 3 | Início (painel por nível) | `screens/comum/Home.js` | todos logados |
+| 4 | Máquinas disponíveis (busca e filtros) | `screens/comum/Maquinas.js` | todos logados |
+| 5 | Detalhes da máquina | `screens/comum/DetalhesMaquina.js` | todos logados |
+| 6 | Solicitar aluguel | `screens/produtor/SolicitarAluguel.js` | produtor |
+| 7 | Minhas solicitações | `screens/produtor/MinhasSolicitacoes.js` | produtor |
+| 8 | Minhas máquinas | `screens/proprietario/MinhasMaquinas.js` | proprietário |
+| 9 | Cadastrar / editar máquina | `screens/proprietario/FormularioMaquina.js` | proprietário, admin |
+| 10 | Solicitações recebidas | `screens/proprietario/SolicitacoesRecebidas.js` | proprietário, admin |
+| 11 | Gerenciar usuários | `screens/admin/Usuarios.js` | admin |
 
 ## 8. Fluxo de navegação
 
@@ -144,22 +149,40 @@ A navegação usa **React Navigation (native stack)**. As telas disponíveis mud
 
 ```text
 trakto/
-├── App.js                 # sessão, dados e rotas por nível (React Navigation)
-├── index.js               # ponto de entrada do Expo
-├── app.json               # nome, ícones e configuração do app
-├── package.json
-├── assets/                # ícone, splash e favicon da TRAKTO
+├── App.js                    # estado da sessão e dos dados + ações (entrar, salvar, alterar status…)
+├── index.js                  # ponto de entrada do Expo
+├── app.json                  # nome, ícones, splash e pacote Android
+├── navigation/
+│   └── Rotas.js              # React Navigation: rotas públicas e privadas guiadas por permissão
+├── screens/                  # telas agrupadas por perfil de acesso
+│   ├── publico/              # Login, CadastroUsuario
+│   ├── comum/                # Home, Maquinas, DetalhesMaquina
+│   ├── produtor/             # SolicitarAluguel, MinhasSolicitacoes
+│   ├── proprietario/         # MinhasMaquinas, FormularioMaquina, SolicitacoesRecebidas
+│   └── admin/                # Usuarios
 ├── components/
-│   ├── ui.js              # paleta de cores e componentes visuais (Botão, Campo, Chip…)
-│   ├── Logo.js            # marca da TRAKTO
-│   ├── CartaoMaquina.js   # cartão usado nas listas de máquinas
-│   └── CartaoSolicitacao.js
-├── screens/               # 11 telas (ver seção 7)
-└── services/
-    └── dadosFicticios.js  # dados de demonstração (Entrega 1)
+│   ├── ui/                   # biblioteca visual: Botao, Campo, Cartao, Chip, Aviso, Toast, Avatar…
+│   ├── Logo.js               # marca da TRAKTO
+│   ├── CartaoMaquina.js      # cartão da listagem de máquinas
+│   ├── CartaoSolicitacao.js  # cartão do pedido com linha do tempo e contato
+│   ├── LinhaDoTempo.js       # Enviada → Aceita → Concluída
+│   ├── Indicador.js          # número de destaque dos painéis
+│   └── AcaoRapida.js         # atalhos da tela inicial
+├── constants/
+│   ├── permissoes.js         # níveis e matriz de permissões (pode / podeAlterarMaquina)
+│   └── negocio.js            # comissão, limites, tipos de máquina, ciclo de status
+├── theme/
+│   └── tema.js               # design system: cores, espaçamentos, raios, fontes, sombras
+├── utils/
+│   └── formatadores.js       # moeda, máscaras de data/telefone, validações
+├── services/
+│   └── dadosFicticios.js     # dados de demonstração (substituído pela API na Entrega 2)
+├── assets/                   # ícone, ícone adaptativo Android, splash, favicon
+└── docs/
+    └── PROPOSTA.md           # documento completo da proposta
 ```
 
-Na **Entrega 2** serão adicionadas as pastas `backend/` (API Express: `routes/`, `controllers/`, `middlewares/`, `database/`) e `database/` (script SQL), e `services/api.js` substituirá os dados fictícios por chamadas `fetch()`.
+**Camadas:** as *telas* só montam a interface; as *regras* (permissões, comissão, status) ficam em `constants/`; o *visual* vem de `theme/` + `components/ui/`; os *dados* chegam pelo `App.js` (hoje em memória, na Entrega 2 via `services/api.js` com `fetch()`). Assim a troca para a API real não exige reescrever as telas.
 
 ## 10. Identidade visual
 
@@ -170,11 +193,11 @@ Na **Entrega 2** serão adicionadas as pastas `backend/` (API Express: `routes/`
 | 🟫 Marrom terra | `#8B5E3C` | etiquetas e detalhes |
 | ⬜ Palha | `#F7F4EC` | fundo |
 
-O símbolo é um **"T" com dois sulcos de lavoura** em amarelo trigo.
+O símbolo é um **"T" com dois sulcos de lavoura** em amarelo trigo. Ícones: Material Community Icons (`@expo/vector-icons`, já incluído no Expo). Os valores ficam em [`theme/tema.js`](theme/tema.js).
 
 ## 11. Tecnologias
 
-**Entrega 1:** React Native · Expo SDK 58 · React Navigation 7 (native stack) · JavaScript
+**Entrega 1:** React Native · Expo SDK 58 · React Navigation 7 (native stack) · @expo/vector-icons · JavaScript (ES Modules)
 **Próximas entregas:** Node.js · Express · MySQL (mysql2) · bcryptjs · jsonwebtoken · AsyncStorage · EAS Build (APK)
 
 ## 12. Como executar
@@ -203,10 +226,11 @@ Nesta etapa os dados ficam **em memória** (arquivo `services/dadosFicticios.js`
 
 ## 13. Roteiro de teste rápido
 
-1. Entre como **Produtor** → *Buscar máquinas* → abra o **Trator Valtra** → *Solicitar aluguel* (data e horas) → a solicitação aparece como **Pendente** em *Minhas solicitações*.
-2. Saia e entre como **Proprietário** → *Ver solicitações recebidas* → **Aceitar** → o contato do produtor é liberado.
-3. Ainda como proprietário → *Anunciar nova máquina* → preencha e publique → edite e exclua em *Minhas máquinas*.
-4. Entre como **Admin** → *Gerenciar usuários* → altere o nível de um usuário; em *Moderar anúncios* remova um anúncio.
+1. Entre como **Produtor** → toque na busca → filtre por *Trator* → abra o **Trator Valtra A750** → *Solicitar aluguel* (data futura + 6 h) → o pedido aparece como **Pendente** em *Minhas solicitações*, com a linha do tempo.
+2. Saia e entre como **Proprietário** → o alerta mostra os pedidos aguardando → **Aceitar** → o WhatsApp do produtor é liberado → *Marcar serviço como concluído* → a renda (já sem a comissão de 10%) aparece no Início.
+3. Ainda como proprietário → *Anunciar máquina* → publique → abra em *Minhas máquinas* → **Editar** → **Excluir** (com confirmação). Tente abrir a máquina de outro proprietário: não há botões de edição.
+4. Entre como **Admin** → *Usuários* → altere o nível de um usuário (o próprio nível fica bloqueado) → *Moderar anúncios* → remova um anúncio.
+5. Volte ao login como **Produtor**: as telas de proprietário e admin não existem na navegação desse perfil.
 
 ---
 
