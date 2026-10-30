@@ -1,56 +1,86 @@
 import { useState } from 'react';
-import { Text, View } from 'react-native';
-import { Aviso, Botao, Campo, Pagina, Painel, Vazio, cores, estilos, moeda } from '../components/ui.js';
+import { StyleSheet, Text, View } from 'react-native';
+import { Aviso, Botao, Campo, Cartao, Chip, EstadoVazio, Icone, Pagina, estilos } from '../../components/ui/index.js';
+import { LIMITE_HORAS, iconeDoTipo } from '../../constants/negocio.js';
+import { dataValidaFutura, mascaraData, moeda, numero } from '../../utils/formatadores.js';
+import { cores, espaco, raio } from '../../theme/tema.js';
 
-// Formata a data enquanto o usuário digita: 05112026 → 05/11/2026.
-function mascaraData(texto) {
-  const numeros = texto.replace(/\D/g, '').slice(0, 8);
-  return [numeros.slice(0, 2), numeros.slice(2, 4), numeros.slice(4, 8)].filter(Boolean).join('/');
-}
+const HORAS_RAPIDAS = [2, 4, 6, 8];
 
 export default function SolicitarAluguel({ navigation, route, maquinas, criarSolicitacao }) {
   const maquina = maquinas.find(function mesma(m) { return m.id === route.params?.id; });
   const [data, setData] = useState('');
   const [horas, setHoras] = useState('');
   const [observacao, setObservacao] = useState('');
-  const [erro, setErro] = useState('');
+  const [erros, setErros] = useState({});
+  const [erroGeral, setErroGeral] = useState('');
 
-  if (!maquina) { return <Pagina><Vazio titulo="Máquina não encontrada" texto="Volte e escolha outra máquina." /></Pagina>; }
+  if (!maquina) {
+    return <Pagina><EstadoVazio icone="alert-circle-outline" titulo="Máquina não encontrada" texto="Volte e escolha outra máquina." /></Pagina>;
+  }
 
-  const qtdHoras = Number(horas.replace(',', '.')) || 0;
+  const qtdHoras = numero(horas);
   const total = qtdHoras * maquina.precoHora;
 
   function enviar() {
-    setErro('');
-    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(data)) { setErro('Informe a data no formato dd/mm/aaaa.'); return; }
-    if (qtdHoras <= 0 || qtdHoras > 200) { setErro('Informe uma quantidade de horas entre 1 e 200.'); return; }
+    setErroGeral('');
+    const e = {};
+    if (!dataValidaFutura(data)) { e.data = 'Informe uma data válida, de hoje em diante (dd/mm/aaaa).'; }
+    if (qtdHoras < LIMITE_HORAS.minimo || qtdHoras > LIMITE_HORAS.maximo) { e.horas = 'Informe entre ' + LIMITE_HORAS.minimo + ' e ' + LIMITE_HORAS.maximo + ' horas.'; }
+    setErros(e);
+    if (Object.keys(e).length > 0) { setErroGeral('Confira os campos destacados.'); return; }
     criarSolicitacao({ maquinaId: maquina.id, data, horas: qtdHoras, valorTotal: total, observacao: observacao.trim() });
     navigation.replace('MinhasSolicitacoes');
   }
 
   return <Pagina>
-    <Painel>
-      <Text style={estilos.etiqueta}>Você está solicitando</Text>
-      <Text style={[estilos.texto, { fontWeight: '800', fontSize: 18 }]}>{maquina.nome}</Text>
-      <Text style={estilos.subtitulo}>📍 {maquina.cidade} • {moeda(maquina.precoHora)} por hora</Text>
-    </Painel>
-
-    <Painel>
-      <Aviso mensagem={erro} />
-      <Campo rotulo="Data desejada" value={data} onChangeText={function v(t) { setData(mascaraData(t)); }} placeholder="dd/mm/aaaa" keyboardType="number-pad" />
-      <Campo rotulo="Quantidade de horas" value={horas} onChangeText={setHoras} placeholder="Ex.: 6" keyboardType="decimal-pad" />
-      <Campo rotulo="Observações (opcional)" value={observacao} onChangeText={setObservacao}
-        placeholder="Ex.: preparo de solo, 3 hectares, precisa de operador" multiline style={{ minHeight: 90, textAlignVertical: 'top' }} maxLength={300} />
-    </Painel>
-
-    <Painel style={{ backgroundColor: cores.verdeClaro, borderColor: '#D3E0CB' }}>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text style={estilos.subtitulo}>Valor estimado</Text>
-        <Text style={{ color: cores.verdeEscuro, fontSize: 24, fontWeight: '900' }}>{moeda(total)}</Text>
+    <Cartao style={css.resumo}>
+      <View style={css.resumoIcone}><Icone nome={iconeDoTipo(maquina.tipo)} tamanho={30} cor={cores.terra} /></View>
+      <View style={{ flex: 1 }}>
+        <Text style={estilos.etiqueta}>Você está solicitando</Text>
+        <Text style={css.resumoNome} numberOfLines={2}>{maquina.nome}</Text>
+        <Text style={estilos.pequeno}>{maquina.cidade} · {moeda(maquina.precoHora)}/hora{maquina.comOperador ? ' · com operador' : ''}</Text>
       </View>
-      <Text style={estilos.subtitulo}>O pagamento é combinado diretamente com o proprietário após a confirmação.</Text>
-    </Painel>
+    </Cartao>
 
-    <Botao titulo="Enviar solicitação" onPress={enviar} />
+    <Cartao>
+      <Text style={estilos.etiqueta}>Detalhes do serviço</Text>
+      <Aviso mensagem={erroGeral} />
+      <Campo rotulo="Data desejada" icone="calendar-blank-outline" value={data} erro={erros.data}
+        onChangeText={function v(t) { setData(mascaraData(t)); setErros({ ...erros, data: '' }); }} placeholder="dd/mm/aaaa" keyboardType="number-pad" />
+      <Campo rotulo="Quantidade de horas" icone="timer-outline" value={horas} erro={erros.horas}
+        onChangeText={function v(t) { setHoras(t.replace(/[^0-9,.]/g, '')); setErros({ ...erros, horas: '' }); }} placeholder="Ex.: 6" keyboardType="decimal-pad" />
+      <View style={estilos.linha}>
+        {HORAS_RAPIDAS.map(function chip(h) {
+          return <Chip key={h} titulo={h + ' h'} ativo={qtdHoras === h} onPress={function escolher() { setHoras(String(h)); setErros({ ...erros, horas: '' }); }} />;
+        })}
+      </View>
+      <Campo rotulo="Observações (opcional)" icone="text-box-outline" value={observacao} onChangeText={setObservacao} multiline maxLength={300}
+        placeholder="Ex.: preparo de solo, 3 hectares, acesso por estrada de chão" />
+    </Cartao>
+
+    <View style={css.total}>
+      <View style={css.totalLinha}><Text style={css.totalRotulo}>Valor por hora</Text><Text style={css.totalValorPequeno}>{moeda(maquina.precoHora)}</Text></View>
+      <View style={css.totalLinha}><Text style={css.totalRotulo}>Horas</Text><Text style={css.totalValorPequeno}>× {qtdHoras || 0}</Text></View>
+      <View style={css.divisor} />
+      <View style={css.totalLinha}><Text style={css.totalTitulo}>Total estimado</Text><Text style={css.totalValor}>{moeda(total)}</Text></View>
+      <Text style={css.totalNota}>O pagamento é combinado com o proprietário depois que ele aceitar o pedido.</Text>
+    </View>
+
+    <Botao titulo="Enviar solicitação" icone="send-outline" onPress={enviar} />
   </Pagina>;
 }
+
+const css = StyleSheet.create({
+  resumo: { flexDirection: 'row', alignItems: 'center', gap: espaco.md + 2 },
+  resumoIcone: { width: 60, height: 60, borderRadius: raio.lg, backgroundColor: cores.terraClara, alignItems: 'center', justifyContent: 'center' },
+  resumoNome: { color: cores.texto, fontSize: 17, fontWeight: '800', marginVertical: 2 },
+  total: { backgroundColor: cores.verdeEscuro, borderRadius: raio.xl, padding: espaco.xl, gap: espaco.sm },
+  totalLinha: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  totalRotulo: { color: 'rgba(255,255,255,0.7)', fontSize: 14 },
+  totalValorPequeno: { color: '#FFFFFF', fontSize: 14, fontWeight: '700' },
+  divisor: { height: 1, backgroundColor: 'rgba(255,255,255,0.15)', marginVertical: 4 },
+  totalTitulo: { color: '#FFFFFF', fontSize: 16, fontWeight: '800' },
+  totalValor: { color: cores.trigo, fontSize: 28, fontWeight: '900' },
+  totalNota: { color: 'rgba(255,255,255,0.65)', fontSize: 12, lineHeight: 17 },
+});
