@@ -44,3 +44,14 @@ export function primeiroNome(nome) {
 export function numero(texto) {
   return Number(String(texto).replace(',', '.')) || 0;
 }
+
+// A API usa datas no padrão ISO (AAAA-MM-DD); a tela mostra dd/mm/aaaa.
+export function dataParaApi(dataBr) {
+  const p = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(String(dataBr || ''));
+  return p ? p[3] + '-' + p[2] + '-' + p[1] : '';
+}
+
+export function dataDaApi(dataIso) {
+  const p = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(dataIso || ''));
+  return p ? p[3] + '/' + p[2] + '/' + p[1] : String(dataIso || '');
+}
