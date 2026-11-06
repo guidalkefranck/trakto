@@ -2,13 +2,15 @@ import { StyleSheet, Text, View } from 'react-native';
 import LinhaDoTempo from './LinhaDoTempo.js';
 import { Avatar, Cartao, Icone, SeloStatus } from './ui/index.js';
 import { iconeDoTipo } from '../constants/negocio.js';
-import { moeda } from '../utils/formatadores.js';
+import { dataDaApi, moeda } from '../utils/formatadores.js';
 import { cores, espaco, raio } from '../theme/tema.js';
 
-// Uma solicitação de aluguel. Os botões de ação chegam como children porque
-// mudam conforme quem está vendo (produtor, proprietário ou admin).
-export default function CartaoSolicitacao({ solicitacao, maquina, pessoa, rotuloPessoa, children = null }) {
-  const contatoLiberado = (solicitacao.status === 'aceita' || solicitacao.status === 'concluida') && pessoa;
+// Uma solicitação de aluguel, como vem da API (com máquina, produtor e proprietário).
+// Os botões de ação chegam como children porque mudam conforme quem está vendo.
+// O telefone só vem preenchido da API depois do aceite (regra garantida no servidor).
+export default function CartaoSolicitacao({ solicitacao, pessoa, rotuloPessoa, children = null }) {
+  const maquina = solicitacao.maquina;
+  const contatoLiberado = Boolean(pessoa && pessoa.telefone);
   return <Cartao>
     <View style={css.topo}>
       <View style={css.icone}><Icone nome={maquina ? iconeDoTipo(maquina.tipo) : 'tractor'} tamanho={24} cor={cores.terra} /></View>
@@ -20,7 +22,7 @@ export default function CartaoSolicitacao({ solicitacao, maquina, pessoa, rotulo
     </View>
 
     <View style={css.dados}>
-      <Dado icone="calendar-blank-outline" texto={solicitacao.data} />
+      <Dado icone="calendar-blank-outline" texto={dataDaApi(solicitacao.dataServico)} />
       <Dado icone="timer-outline" texto={solicitacao.horas + ' h'} />
       <Dado icone="cash" texto={moeda(solicitacao.valorTotal)} destaque />
     </View>

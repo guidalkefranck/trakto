@@ -1,89 +1,122 @@
-// Ponto central da TRAKTO: guarda a sessão e os dados e repassa tudo às telas
-// por Props (mesma arquitetura do projeto-modelo, sem Redux ou Context).
+// Ponto central da TRAKTO: guarda a sessão e os dados, conversa com a API e
+// repassa tudo às telas por Props (mesma arquitetura do projeto-modelo).
 //
-// ENTREGA 1: os dados vivem em memória (services/dadosFicticios.js).
-// ENTREGA 2: cada função abaixo passará a chamar a API com fetch().
-// ENTREGA 3: entrar() receberá um JWT da API e o enviará como Bearer Token.
+// ENTREGA 2: todos os dados vêm do MySQL através da API (services/api.js → fetch()).
+// ENTREGA 3: entrar() receberá um JWT, guardado no AsyncStorage e enviado como Bearer Token.
 import { useCallback, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import Rotas from './navigation/Rotas.js';
 import { Toast } from './components/ui/index.js';
-import { maquinasIniciais, solicitacoesIniciais, usuariosIniciais } from './services/dadosFicticios.js';
-
-function proximoId(lista) {
-  return lista.reduce(function maior(maximo, item) { return Math.max(maximo, item.id); }, 0) + 1;
-}
+import { pode } from './constants/permissoes.js';
+import * as api from './services/api.js';
 
 export default function App() {
   const [usuario, setUsuario] = useState(null);
   const [aviso, setAviso] = useState('');
   const [toast, setToast] = useState('');
-  const [usuarios, setUsuarios] = useState(usuariosIniciais);
-  const [maquinas, setMaquinas] = useState(maquinasIniciais);
-  const [solicitacoes, setSolicitacoes] = useState(solicitacoesIniciais);
+  const [usuarios, setUsuarios] = useState([]);
+  const [maquinas, setMaquinas] = useState([]);
+  const [solicitacoes, setSolicitacoes] = useState([]);
+  const [carregando, setCarregando] = useState(false);
+  const [erroCarga, setErroCarga] = useState('');
 
   const fecharToast = useCallback(function fechar() { setToast(''); }, []);
 
-  // ---------- Sessão (provisória até a Entrega 3: hash + JWT) ----------
-  function entrar(email, senha) {
-    const encontrado = usuarios.find(function mesmoEmail(u) { return u.email === email; });
-    if (!encontrado || encontrado.senha !== senha) { return 'E-mail ou senha inválidos.'; }
-    setAviso('');
-    setUsuario(encontrado);
-    return '';
-  }
+  // Busca na API tudo o que o usuário logado pode ver (GET em paralelo).
+  const carregarDados = useCallback(async function carregar(quem) {
+    setCarregando(true);
+    setErroCarga('');
+    try {
+      const [listaMaquinas, listaSolicitacoes, listaUsuarios] = await Promise.all([
+        api.listarMaquinas(),
+        api.listarSolicitacoes(),
+        pode(quem, 'gerenciarUsuarios') ? api.listarUsuarios() : Promise.resolve([]),
+      ]);
+      setMaquinas(listaMaquinas);
+      setSolicitacoes(listaSolicitacoes);
+      setUsuarios(listaUsuarios);
+    } catch (erro) {
+      setErroCarga(erro.message);
+    } finally {
+      setCarregando(false);
+    }
+  }, []);
 
-  function cadastrarUsuario(dados) {
-    if (usuarios.some(function mesmoEmail(u) { return u.email === dados.email; })) { return 'Este e-mail já está cadastrado.'; }
-    setUsuarios(function adicionar(lista) { return [...lista, { ...dados, id: proximoId(lista) }]; });
-    setAviso('Conta criada com sucesso! Agora é só entrar.');
-    return '';
-  }
+  const recarregar = useCallback(function recarregarDados() {
+    return usuario ? carregarDados(usuario) : Promise.resolve();
+  }, [usuario, carregarDados]);
 
-  function sair() {
-    setUsuario(null);
-    setAviso('Você saiu da sua conta.');
-  }
-
-  // ---------- Máquinas (entidade principal — CRUD) ----------
-  function salvarMaquina(dados) {
-    if (dados.id) {
-      setMaquinas(function editar(lista) { return lista.map(function trocar(m) { return m.id === dados.id ? { ...m, ...dados } : m; }); });
-      setToast('Anúncio atualizado.');
-    } else {
-      setMaquinas(function adicionar(lista) { return [...lista, { ...dados, id: proximoId(lista), proprietarioId: usuario.id }]; });
-      setToast('Máquina anunciada com sucesso!');
+  // ---------- Sessão ----------
+  // Retorna '' em caso de sucesso ou a mensagem de erro para a tela mostrar.
+  async function entrar(email, senha) {
+    try {
+      const { usuario: logado } = await api.login(email, senha);
+      api.definirSessao(logado);
+      setAviso('');
+      setUsuario(logado);
+      carregarDados(logado);
+      return '';
+    } catch (erro) {
+      return erro.message;
     }
   }
 
-  function removerMaquina(id, mensagem = 'Anúncio removido.') {
-    setMaquinas(function remover(lista) { return lista.filter(function manter(m) { return m.id !== id; }); });
-    setToast(mensagem);
+  async function cadastrarUsuario(dados) {
+    try {
+      await api.cadastrar(dados);
+      setAviso('Conta criada com sucesso! Agora é só entrar.');
+      return '';
+    } catch (erro) {
+      return erro.message;
+    }
   }
 
-  // ---------- Solicitações de aluguel ----------
-  function criarSolicitacao(dados) {
-    setSolicitacoes(function adicionar(lista) {
-      return [{ ...dados, id: proximoId(lista), produtorId: usuario.id, status: 'pendente' }, ...lista];
-    });
+  function sair() {
+    api.definirSessao(null);
+    setUsuario(null);
+    setMaquinas([]); setSolicitacoes([]); setUsuarios([]);
+    setAviso('Você saiu da sua conta.');
+  }
+
+  // ---------- Ações: chamam a API e recarregam os dados. ----------
+  // Em caso de erro, lançam a exceção para a tela mostrar a mensagem da API.
+  async function salvarMaquina(dados) {
+    const { id, ...campos } = dados;
+    const resposta = id ? await api.atualizarMaquina(id, campos) : await api.criarMaquina(campos);
+    await carregarDados(usuario);
+    setToast(resposta.mensagem);
+  }
+
+  async function removerMaquina(id) {
+    const resposta = await api.excluirMaquina(id);
+    await carregarDados(usuario);
+    setToast(resposta.mensagem);
+  }
+
+  async function criarSolicitacao(dados) {
+    await api.criarSolicitacao(dados);
+    await carregarDados(usuario);
     setToast('Solicitação enviada! Aguarde a resposta do proprietário.');
   }
 
-  function alterarStatus(id, status, mensagem = 'Solicitação atualizada.') {
-    setSolicitacoes(function atualizar(lista) { return lista.map(function trocar(s) { return s.id === id ? { ...s, status } : s; }); });
+  async function alterarStatus(id, status, mensagem = 'Solicitação atualizada.') {
+    await api.alterarStatusSolicitacao(id, status);
+    await carregarDados(usuario);
     setToast(mensagem);
   }
 
-  // ---------- Usuários (admin) ----------
-  function alterarNivel(id, nivel) {
-    setUsuarios(function atualizar(lista) { return lista.map(function trocar(u) { return u.id === id ? { ...u, nivel } : u; }); });
+  async function alterarNivel(id, nivel) {
+    await api.alterarNivelUsuario(id, nivel);
+    await carregarDados(usuario);
     setToast('Nível de acesso atualizado.');
   }
 
   const contexto = {
-    usuario, usuarios, maquinas, solicitacoes, aviso,
-    entrar, cadastrarUsuario, sair, salvarMaquina, removerMaquina, criarSolicitacao, alterarStatus, alterarNivel,
+    usuario, usuarios, maquinas, solicitacoes, aviso, carregando, erroCarga,
+    entrar, cadastrarUsuario, sair, recarregar,
+    salvarMaquina, removerMaquina, criarSolicitacao, alterarStatus, alterarNivel,
+    mostrarToast: setToast,
   };
 
   return <SafeAreaProvider>
