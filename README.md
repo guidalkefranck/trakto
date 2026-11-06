@@ -7,14 +7,14 @@ Aplicação mobile (React Native + Expo) que conecta **pequenos produtores rurai
 **Autor:** Guilherme Dalke — 3º ano do Ensino Médio Técnico
 **Projeto Avaliativo:** Aplicação Mobile com JWT e Níveis de Usuário
 
-![React Native](https://img.shields.io/badge/React%20Native-0.88-2E5B34) ![Expo](https://img.shields.io/badge/Expo-SDK%2058-2E5B34) ![React Navigation](https://img.shields.io/badge/React%20Navigation-7-E8A93A) ![Status](https://img.shields.io/badge/Entrega-1%20de%204-8B5E3C)
+![React Native](https://img.shields.io/badge/React%20Native-0.88-2E5B34) ![Expo](https://img.shields.io/badge/Expo-SDK%2058-2E5B34) ![React Navigation](https://img.shields.io/badge/React%20Navigation-7-E8A93A) ![Status](https://img.shields.io/badge/Entrega-2%20de%204-8B5E3C) ![Node](https://img.shields.io/badge/Node.js-Express%205-2E5B34) ![MySQL](https://img.shields.io/badge/MySQL-8-E8A93A)
 
 > 📄 **Documento completo da proposta** — personas, requisitos funcionais e não funcionais, regras de negócio, modelo de dados e rotas da API: **[docs/PROPOSTA.md](docs/PROPOSTA.md)**
 
 | Entrega | Conteúdo | Situação |
 |---|---|---|
 | 1 | Proposta, estrutura inicial, telas e navegação | ✅ Entregue |
-| 2 | Modelagem, MySQL, API Express e integração com `fetch()` | ⏳ Próxima |
+| 2 | Modelagem, MySQL, API Express e integração com `fetch()` | ✅ Entregue — veja **[docs/ENTREGA2.md](docs/ENTREGA2.md)** |
 | 3 | Cadastro, login, hash, JWT, níveis, rotas protegidas e CRUD completo | ⏳ |
 | 4 | Testes, correções, APK e apresentação | ⏳ |
 
@@ -176,13 +176,16 @@ trakto/
 ├── utils/
 │   └── formatadores.js       # moeda, máscaras de data/telefone, validações
 ├── services/
-│   └── dadosFicticios.js     # dados de demonstração (substituído pela API na Entrega 2)
+│   └── api.js                # todas as chamadas fetch() para a API
+├── backend/                  # API Node.js + Express (veja docs/ENTREGA2.md)
+├── database/
+│   └── trakto.sql            # script do banco MySQL
 ├── assets/                   # ícone, ícone adaptativo Android, splash, favicon
 └── docs/
     └── PROPOSTA.md           # documento completo da proposta
 ```
 
-**Camadas:** as *telas* só montam a interface; as *regras* (permissões, comissão, status) ficam em `constants/`; o *visual* vem de `theme/` + `components/ui/`; os *dados* chegam pelo `App.js` (hoje em memória, na Entrega 2 via `services/api.js` com `fetch()`). Assim a troca para a API real não exige reescrever as telas.
+**Camadas:** as *telas* só montam a interface; as *regras* (permissões, comissão, status) ficam em `constants/`; o *visual* vem de `theme/` + `components/ui/`; os *dados* chegam pelo `App.js` (via `services/api.js` com `fetch()` → API Express → MySQL).
 
 ## 10. Identidade visual
 
@@ -200,29 +203,43 @@ O símbolo é um **"T" com dois sulcos de lavoura** em amarelo trigo. Ícones: M
 **Entrega 1:** React Native · Expo SDK 58 · React Navigation 7 (native stack) · @expo/vector-icons · JavaScript (ES Modules)
 **Próximas entregas:** Node.js · Express · MySQL (mysql2) · bcryptjs · jsonwebtoken · AsyncStorage · EAS Build (APK)
 
-## 12. Como executar
+## 12. Como executar (Entrega 2: app + API + MySQL)
 
-Pré-requisitos: Node.js 20+ e o app **Expo Go** no celular (ou um emulador Android).
+Pré-requisitos: **Node.js 20+**, **MySQL 8** (com Workbench) e o app **Expo Go** no celular (ou navegador).
 
 ```bash
+# 1. Dependências do app e da API
 npm install
-npx expo start
+
+# 2. Banco de dados: abra database/trakto.sql no MySQL Workbench e execute (⚡)
+
+# 3. Configuração da API: copie backend/.env.example para backend/.env
+#    e coloque a senha do SEU MySQL em DB_PASSWORD
+copy backend\.env.example backend\.env        # Windows  (Linux/Mac: cp)
+
+# 4. Dados de demonstração (contas, máquinas e pedidos; senhas em hash)
+npm run db:popular
+
+# 5. API (deixe este terminal aberto)
+npm run api            # → http://localhost:3000  e  "Conectada ao MySQL"
+
+# 6. App (em outro terminal)
+npx expo start         # w = navegador · QR Code = Expo Go
 ```
 
-- Leia o QR Code com o Expo Go (o celular precisa estar na mesma rede Wi-Fi), ou
-- pressione `w` para abrir no navegador, ou `a` para abrir no emulador Android.
+**No celular (Expo Go):** copie `.env.example` para `.env` na raiz e troque `localhost` pelo IP do computador (comando `ipconfig`), por exemplo `EXPO_PUBLIC_API_URL=http://192.168.0.15:3000`. Celular e computador precisam estar no mesmo Wi-Fi.
 
-### Contas de demonstração (Entrega 1)
+**Testes:** `npm test` (validações da API) · exemplos de chamadas em [`backend/requisicoes.http`](backend/requisicoes.http).
 
-Nesta etapa os dados ficam **em memória** (arquivo `services/dadosFicticios.js`) e voltam ao estado inicial quando o app é reiniciado. Na tela de login há botões que preenchem cada conta:
+### Contas de demonstração
 
 | Perfil | E-mail | Senha |
 |---|---|---|
-| Produtor | `produtor@trakto.com` | `123456` |
-| Proprietário | `proprietario@trakto.com` | `123456` |
-| Admin | `admin@trakto.com` | `123456` |
+| Produtor | `produtor@trakto.com` | `trakto123` |
+| Proprietário | `proprietario@trakto.com` | `trakto123` |
+| Admin | `admin@trakto.com` | `trakto123` |
 
-> ⚠️ Estas senhas são apenas para demonstração. A partir da Entrega 3 as senhas serão armazenadas com **hash (bcrypt)** no MySQL e a sessão será controlada por **JWT**.
+> As senhas ficam no MySQL **somente como hash bcrypt**. Nenhuma senha real ou `.env` vai para o repositório.
 
 ## 13. Roteiro de teste rápido
 
