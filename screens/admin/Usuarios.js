@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Avatar, Campo, Cartao, Chip, EstadoVazio, Icone, Pagina, estilos } from '../../components/ui/index.js';
+import { Aviso, Avatar, Campo, Cartao, Chip, EstadoVazio, Icone, Pagina, estilos } from '../../components/ui/index.js';
 import { NIVEIS } from '../../constants/permissoes.js';
 import { cores, espaco, raio } from '../../theme/tema.js';
 
 // Somente o administrador acessa esta tela e altera níveis de acesso.
-export default function Usuarios({ usuario, usuarios, alterarNivel }) {
+export default function Usuarios({ usuario, usuarios, alterarNivel, recarregar, carregando, erroCarga }) {
   const [busca, setBusca] = useState('');
+  const [erro, setErro] = useState('');
   const [filtro, setFiltro] = useState('todos');
 
   const termo = busca.trim().toLowerCase();
@@ -17,7 +18,12 @@ export default function Usuarios({ usuario, usuarios, alterarNivel }) {
 
   function contar(nivel) { return usuarios.filter(function c(u) { return u.nivel === nivel; }).length; }
 
-  return <Pagina>
+  async function trocarNivel(id, nivel) {
+    setErro('');
+    try { await alterarNivel(id, nivel); } catch (e) { setErro(e.message); }
+  }
+
+  return <Pagina aoAtualizar={recarregar} atualizando={carregando} erro={erroCarga}>
     <View style={css.resumo}>
       {Object.keys(NIVEIS).map(function bloco(nivel) {
         return <View key={nivel} style={css.resumoItem}>
@@ -36,7 +42,8 @@ export default function Usuarios({ usuario, usuarios, alterarNivel }) {
       })}
     </ScrollView>
 
-    {lista.length === 0 && <EstadoVazio icone="account-search-outline" titulo="Nenhum usuário encontrado" />}
+    <Aviso mensagem={erro} />
+    {lista.length === 0 && !carregando && <EstadoVazio icone="account-search-outline" titulo="Nenhum usuário encontrado" />}
 
     {lista.map(function cartao(u) {
       const euMesmo = u.id === usuario.id;
@@ -53,7 +60,7 @@ export default function Usuarios({ usuario, usuarios, alterarNivel }) {
         <View style={estilos.linha}>
           {Object.keys(NIVEIS).map(function chip(nivel) {
             return <Chip key={nivel} titulo={NIVEIS[nivel].curto} icone={NIVEIS[nivel].icone} ativo={u.nivel === nivel}
-              onPress={function trocar() { if (!euMesmo && u.nivel !== nivel) { alterarNivel(u.id, nivel); } }} />;
+              onPress={function trocar() { if (!euMesmo && u.nivel !== nivel) { trocarNivel(u.id, nivel); } }} />;
           })}
         </View>
         {euMesmo && <View style={css.protecao}>

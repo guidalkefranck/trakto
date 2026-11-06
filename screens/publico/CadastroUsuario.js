@@ -15,6 +15,7 @@ export default function CadastroUsuario({ navigation, aoCadastrar }) {
   const [form, setForm] = useState({ nome: '', email: '', telefone: '', cidade: '', senha: '', confirmar: '', nivel: 'produtor' });
   const [erros, setErros] = useState({});
   const [erroGeral, setErroGeral] = useState('');
+  const [enviando, setEnviando] = useState(false);
 
   function alterar(campo, valor) {
     setForm(function atualizar(atual) { return { ...atual, [campo]: valor }; });
@@ -27,19 +28,21 @@ export default function CadastroUsuario({ navigation, aoCadastrar }) {
     if (!emailValido(form.email.trim())) { e.email = 'Informe um e-mail válido.'; }
     if (form.telefone.replace(/\D/g, '').length < 10) { e.telefone = 'Informe um telefone com DDD.'; }
     if (!form.cidade.trim()) { e.cidade = 'Informe sua cidade.'; }
-    if (form.senha.length < 6) { e.senha = 'A senha precisa ter pelo menos 6 caracteres.'; }
+    if (form.senha.length < 8) { e.senha = 'A senha precisa ter pelo menos 8 caracteres.'; }
     if (form.confirmar !== form.senha) { e.confirmar = 'As senhas não conferem.'; }
     setErros(e);
     return Object.keys(e).length === 0;
   }
 
-  function cadastrar() {
+  async function cadastrar() {
     setErroGeral('');
     if (!validar()) { return; }
-    const falha = aoCadastrar({
+    setEnviando(true);
+    const falha = await aoCadastrar({
       nome: form.nome.trim(), email: form.email.trim().toLowerCase(), telefone: form.telefone,
       cidade: form.cidade.trim(), senha: form.senha, nivel: form.nivel,
     });
+    setEnviando(false);
     if (falha) { setErroGeral(falha); return; }
     navigation.goBack();
   }
@@ -78,15 +81,15 @@ export default function CadastroUsuario({ navigation, aoCadastrar }) {
       <Campo rotulo="Cidade" icone="map-marker-outline" value={form.cidade} erro={erros.cidade}
         onChangeText={function v(t) { alterar('cidade', t); }} placeholder="Ex.: Lajeado" />
       <Campo rotulo="Senha" icone="lock-outline" senha value={form.senha} erro={erros.senha}
-        onChangeText={function v(t) { alterar('senha', t); }} autoCapitalize="none" dica="Mínimo de 6 caracteres." />
+        onChangeText={function v(t) { alterar('senha', t); }} autoCapitalize="none" dica="Mínimo de 8 caracteres." />
       <Campo rotulo="Confirmar senha" icone="lock-check-outline" senha value={form.confirmar} erro={erros.confirmar}
         onChangeText={function v(t) { alterar('confirmar', t); }} autoCapitalize="none" onSubmitEditing={cadastrar} />
-      <Botao titulo="Criar minha conta" icone="check" onPress={cadastrar} />
+      <Botao titulo="Criar minha conta" icone="check" onPress={cadastrar} carregando={enviando} />
     </Cartao>
 
     <View style={css.privacidade}>
       <Icone nome="shield-lock-outline" tamanho={16} cor={cores.textoSuave} />
-      <Text style={[estilos.pequeno, { flex: 1 }]}>Sua senha será armazenada com criptografia (hash) a partir da versão com banco de dados.</Text>
+      <Text style={[estilos.pequeno, { flex: 1 }]}>Sua senha é guardada no banco apenas como hash (bcrypt) — nem a equipe TRAKTO consegue vê-la.</Text>
     </View>
   </Pagina>;
 }

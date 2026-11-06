@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Avatar, Botao, BotaoConfirmar, Cartao, EstadoVazio, Icone, Pagina, estilos } from '../../components/ui/index.js';
+import { Aviso, Avatar, Botao, BotaoConfirmar, Cartao, EstadoVazio, Icone, Pagina, estilos } from '../../components/ui/index.js';
 import { iconeDoTipo } from '../../constants/negocio.js';
 import { NIVEIS, pode, podeAlterarMaquina } from '../../constants/permissoes.js';
 import { moeda } from '../../utils/formatadores.js';
@@ -13,19 +14,26 @@ function Especificacao({ icone, rotulo, valor }) {
   </View>;
 }
 
-export default function DetalhesMaquina({ navigation, route, usuario, usuarios, maquinas, removerMaquina }) {
+export default function DetalhesMaquina({ navigation, route, usuario, maquinas, removerMaquina }) {
+  const [erro, setErro] = useState('');
   const maquina = maquinas.find(function mesma(m) { return m.id === route.params?.id; });
   if (!maquina) {
     return <Pagina><EstadoVazio icone="alert-circle-outline" titulo="Máquina não encontrada" texto="Este anúncio pode ter sido removido." /></Pagina>;
   }
 
-  const dono = usuarios.find(function mesmo(u) { return u.id === maquina.proprietarioId; });
+  // Os dados do anunciante já vêm junto com a máquina (JOIN na API).
+  const dono = { nome: maquina.proprietarioNome, cidade: maquina.proprietarioCidade, nivel: maquina.proprietarioNivel };
   const ehDono = maquina.proprietarioId === usuario.id;
   const podeAlterar = podeAlterarMaquina(usuario, maquina);
 
-  function remover() {
-    removerMaquina(maquina.id, ehDono ? 'Anúncio excluído.' : 'Anúncio removido pela moderação.');
-    navigation.goBack();
+  async function remover() {
+    setErro('');
+    try {
+      await removerMaquina(maquina.id);
+      navigation.goBack();
+    } catch (e) {
+      setErro(e.message); // ex.: 409 — máquina com aluguel pendente
+    }
   }
 
   return <Pagina>
@@ -68,10 +76,10 @@ export default function DetalhesMaquina({ navigation, route, usuario, usuarios, 
     <Cartao>
       <Text style={estilos.etiqueta}>Anunciante</Text>
       <View style={css.dono}>
-        <Avatar nome={dono ? dono.nome : '?'} tamanho={46} />
+        <Avatar nome={dono.nome} tamanho={46} />
         <View style={{ flex: 1 }}>
-          <Text style={estilos.forte}>{dono ? dono.nome : 'Proprietário'}</Text>
-          <Text style={estilos.pequeno}>{dono ? NIVEIS[dono.nivel].nome + ' · ' + dono.cidade : ''}</Text>
+          <Text style={estilos.forte}>{dono.nome}</Text>
+          <Text style={estilos.pequeno}>{(NIVEIS[dono.nivel] ? NIVEIS[dono.nivel].nome : 'Anunciante') + ' · ' + dono.cidade}</Text>
         </View>
       </View>
       {pode(usuario, 'solicitarAluguel') && <View style={css.info}>
@@ -85,6 +93,7 @@ export default function DetalhesMaquina({ navigation, route, usuario, usuarios, 
       disabled={!maquina.disponivel} onPress={function solicitar() { navigation.navigate('SolicitarAluguel', { id: maquina.id }); }} />}
     {podeAlterar && <Botao titulo="Editar anúncio" icone="pencil-outline" variante="secundario"
       onPress={function editar() { navigation.navigate('FormularioMaquina', { id: maquina.id }); }} />}
+    <Aviso mensagem={erro} />
     {podeAlterar && <BotaoConfirmar titulo={ehDono ? 'Excluir anúncio' : 'Remover anúncio (moderação)'}
       pergunta="Tem certeza? Esta ação não pode ser desfeita." tituloConfirmar="Sim, remover" onConfirmar={remover} />}
   </Pagina>;

@@ -16,7 +16,7 @@ function saudacao() {
   return 'Boa noite';
 }
 
-export default function Home({ navigation, usuario, usuarios, maquinas, solicitacoes, sair }) {
+export default function Home({ navigation, usuario, usuarios, maquinas, solicitacoes, sair, recarregar, carregando, erroCarga }) {
   const insets = useSafeAreaInsets();
   function ir(tela, params = undefined) { return function navegar() { navigation.navigate(tela, params); }; }
 
@@ -36,9 +36,10 @@ export default function Home({ navigation, usuario, usuarios, maquinas, solicita
     return Number(b.cidade === usuario.cidade) - Number(a.cidade === usuario.cidade);
   }).slice(0, 3);
 
-  return <Pagina semPadding>
+  return <Pagina semPadding aoAtualizar={recarregar} atualizando={carregando} erro={erroCarga}>
     {/* Cabeçalho com saudação, perfil e sair */}
     <View style={[css.topo, { paddingTop: insets.top + espaco.lg }]}>
+      <View style={css.topoInterno}>
       <View style={css.linhaTopo}>
         <Avatar nome={usuario.nome} tamanho={46} claro />
         <View style={{ flex: 1 }}>
@@ -59,6 +60,7 @@ export default function Home({ navigation, usuario, usuarios, maquinas, solicita
         <Icone nome="magnify" tamanho={22} cor={cores.textoClaro} />
         <Text style={css.buscaTexto}>Buscar tratores, implementos…</Text>
       </Pressable>}
+      </View>
     </View>
 
     <View style={css.corpo}>
@@ -126,7 +128,8 @@ export default function Home({ navigation, usuario, usuarios, maquinas, solicita
 
 const css = StyleSheet.create({
   topo: { backgroundColor: cores.verde, paddingHorizontal: espaco.xl, paddingBottom: espaco.xxl, gap: espaco.md, borderBottomLeftRadius: 28, borderBottomRightRadius: 28 },
-  linhaTopo: { flexDirection: 'row', alignItems: 'center', gap: espaco.md, width: '100%', maxWidth: 720, alignSelf: 'center' },
+  topoInterno: { width: '100%', maxWidth: 680, alignSelf: 'center', gap: espaco.md },
+  linhaTopo: { flexDirection: 'row', alignItems: 'center', gap: espaco.md },
   saudacao: { color: 'rgba(255,255,255,0.75)', fontSize: 14 },
   nome: { color: '#FFFFFF', fontSize: 24, fontWeight: '900' },
   sair: { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.14)', alignItems: 'center', justifyContent: 'center' },

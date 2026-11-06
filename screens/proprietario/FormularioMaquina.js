@@ -20,13 +20,14 @@ export default function FormularioMaquina({ navigation, route, usuario, maquinas
   });
   const [erros, setErros] = useState({});
   const [erroGeral, setErroGeral] = useState('');
+  const [salvando, setSalvando] = useState(false);
 
   function alterar(campo, valor) {
     setForm(function atualizar(atual) { return { ...atual, [campo]: valor }; });
     setErros(function limpar(atual) { return { ...atual, [campo]: '' }; });
   }
 
-  function salvar() {
+  async function salvar() {
     setErroGeral('');
     const preco = numero(form.precoHora);
     const e = {};
@@ -35,11 +36,17 @@ export default function FormularioMaquina({ navigation, route, usuario, maquinas
     if (!(preco > 0)) { e.precoHora = 'Informe um preço por hora maior que zero.'; }
     setErros(e);
     if (Object.keys(e).length > 0) { setErroGeral('Confira os campos destacados.'); return; }
-    salvarMaquina({
-      ...(existente ? { id: existente.id } : {}), ...form,
-      nome: form.nome.trim(), cidade: form.cidade.trim(), potencia: form.potencia.trim(), descricao: form.descricao.trim(), precoHora: preco,
-    });
-    navigation.goBack();
+    setSalvando(true);
+    try {
+      await salvarMaquina({
+        ...(existente ? { id: existente.id } : {}), ...form,
+        nome: form.nome.trim(), cidade: form.cidade.trim(), potencia: form.potencia.trim(), descricao: form.descricao.trim(), precoHora: preco,
+      });
+      navigation.goBack();
+    } catch (e) {
+      setErroGeral(e.message);
+      setSalvando(false);
+    }
   }
 
   return <Pagina>
@@ -84,7 +91,7 @@ export default function FormularioMaquina({ navigation, route, usuario, maquinas
         valor={form.comOperador} aoMudar={function v(x) { alterar('comOperador', x); }} />
     </Cartao>
 
-    <Botao titulo={existente ? 'Salvar alterações' : 'Publicar anúncio'} icone={existente ? 'content-save-outline' : 'check'} onPress={salvar} />
+    <Botao titulo={existente ? 'Salvar alterações' : 'Publicar anúncio'} icone={existente ? 'content-save-outline' : 'check'} onPress={salvar} carregando={salvando} />
   </Pagina>;
 }
 

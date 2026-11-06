@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { Aviso, Botao, Campo, Cartao, Chip, EstadoVazio, Icone, Pagina, estilos } from '../../components/ui/index.js';
 import { LIMITE_HORAS, iconeDoTipo } from '../../constants/negocio.js';
-import { dataValidaFutura, mascaraData, moeda, numero } from '../../utils/formatadores.js';
+import { dataParaApi, dataValidaFutura, mascaraData, moeda, numero } from '../../utils/formatadores.js';
 import { cores, espaco, raio } from '../../theme/tema.js';
 
 const HORAS_RAPIDAS = [2, 4, 6, 8];
@@ -14,6 +14,7 @@ export default function SolicitarAluguel({ navigation, route, maquinas, criarSol
   const [observacao, setObservacao] = useState('');
   const [erros, setErros] = useState({});
   const [erroGeral, setErroGeral] = useState('');
+  const [enviando, setEnviando] = useState(false);
 
   if (!maquina) {
     return <Pagina><EstadoVazio icone="alert-circle-outline" titulo="Máquina não encontrada" texto="Volte e escolha outra máquina." /></Pagina>;
@@ -22,15 +23,22 @@ export default function SolicitarAluguel({ navigation, route, maquinas, criarSol
   const qtdHoras = numero(horas);
   const total = qtdHoras * maquina.precoHora;
 
-  function enviar() {
+  async function enviar() {
     setErroGeral('');
     const e = {};
     if (!dataValidaFutura(data)) { e.data = 'Informe uma data válida, de hoje em diante (dd/mm/aaaa).'; }
     if (qtdHoras < LIMITE_HORAS.minimo || qtdHoras > LIMITE_HORAS.maximo) { e.horas = 'Informe entre ' + LIMITE_HORAS.minimo + ' e ' + LIMITE_HORAS.maximo + ' horas.'; }
     setErros(e);
     if (Object.keys(e).length > 0) { setErroGeral('Confira os campos destacados.'); return; }
-    criarSolicitacao({ maquinaId: maquina.id, data, horas: qtdHoras, valorTotal: total, observacao: observacao.trim() });
-    navigation.replace('MinhasSolicitacoes');
+    setEnviando(true);
+    try {
+      // O valor total NÃO é enviado: a API calcula com o preço gravado no banco.
+      await criarSolicitacao({ maquinaId: maquina.id, dataServico: dataParaApi(data), horas: qtdHoras, observacao: observacao.trim() });
+      navigation.replace('MinhasSolicitacoes');
+    } catch (e) {
+      setErroGeral(e.message);
+      setEnviando(false);
+    }
   }
 
   return <Pagina>
@@ -67,7 +75,7 @@ export default function SolicitarAluguel({ navigation, route, maquinas, criarSol
       <Text style={css.totalNota}>O pagamento é combinado com o proprietário depois que ele aceitar o pedido.</Text>
     </View>
 
-    <Botao titulo="Enviar solicitação" icone="send-outline" onPress={enviar} />
+    <Botao titulo="Enviar solicitação" icone="send-outline" onPress={enviar} carregando={enviando} />
   </Pagina>;
 }
 

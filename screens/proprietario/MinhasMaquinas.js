@@ -4,13 +4,13 @@ import { Botao, EstadoVazio, Pagina, estilos } from '../../components/ui/index.j
 import { cores, espaco, raio } from '../../theme/tema.js';
 
 // O proprietário gerencia somente as máquinas que ele mesmo anunciou.
-export default function MinhasMaquinas({ navigation, usuario, maquinas }) {
+export default function MinhasMaquinas({ navigation, usuario, maquinas, recarregar, carregando, erroCarga }) {
   const minhas = maquinas.filter(function minha(m) { return m.proprietarioId === usuario.id; });
   const disponiveis = minhas.filter(function d(m) { return m.disponivel; }).length;
 
   function abrirFormulario() { navigation.navigate('FormularioMaquina'); }
 
-  return <Pagina>
+  return <Pagina aoAtualizar={recarregar} atualizando={carregando} erro={erroCarga}>
     <View style={css.resumo}>
       <View style={{ flex: 1 }}>
         <Text style={css.numero}>{minhas.length}</Text>
@@ -19,7 +19,7 @@ export default function MinhasMaquinas({ navigation, usuario, maquinas }) {
       <Botao titulo="Anunciar" icone="plus" variante="destaque" compacto onPress={abrirFormulario} />
     </View>
 
-    {minhas.length === 0 && <EstadoVazio icone="tractor-variant" titulo="Você ainda não anunciou máquinas"
+    {minhas.length === 0 && !carregando && <EstadoVazio icone="tractor-variant" titulo="Você ainda não anunciou máquinas"
       texto="Máquina parada não gera renda. Anuncie a primeira e receba pedidos de produtores da região.">
       <Botao titulo="Anunciar minha primeira máquina" icone="plus" compacto onPress={abrirFormulario} />
     </EstadoVazio>}

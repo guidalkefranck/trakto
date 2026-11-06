@@ -11,7 +11,7 @@ const ORDENS = [
   { valor: 'maiorPreco', titulo: 'Maior preço' },
 ];
 
-export default function Maquinas({ navigation, maquinas }) {
+export default function Maquinas({ navigation, maquinas, recarregar, carregando, erroCarga }) {
   const [busca, setBusca] = useState('');
   const [tipo, setTipo] = useState('Todos');
   const [somenteDisponiveis, setSomenteDisponiveis] = useState(false);
@@ -32,7 +32,7 @@ export default function Maquinas({ navigation, maquinas }) {
 
   function limparFiltros() { setBusca(''); setTipo('Todos'); setSomenteDisponiveis(false); setOrdem('relevancia'); }
 
-  return <Pagina>
+  return <Pagina aoAtualizar={recarregar} atualizando={carregando} erro={erroCarga}>
     <Campo icone="magnify" value={busca} onChangeText={setBusca} placeholder="Buscar por máquina, tipo ou cidade…"
       autoCorrect={false} returnKeyType="search" />
 
@@ -55,7 +55,7 @@ export default function Maquinas({ navigation, maquinas }) {
 
     <Text style={css.contagem}>{filtradas.length} {filtradas.length === 1 ? 'máquina encontrada' : 'máquinas encontradas'}</Text>
 
-    {filtradas.length === 0 && <EstadoVazio icone="tractor-variant" titulo="Nenhuma máquina encontrada" texto="Tente outro termo de busca ou remova os filtros.">
+    {filtradas.length === 0 && !carregando && <EstadoVazio icone="tractor-variant" titulo="Nenhuma máquina encontrada" texto="Tente outro termo de busca ou remova os filtros.">
       <Botao titulo="Limpar filtros" icone="filter-remove-outline" variante="secundario" compacto onPress={limparFiltros} />
     </EstadoVazio>}
 

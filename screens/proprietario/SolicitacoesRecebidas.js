@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import CartaoSolicitacao from '../../components/CartaoSolicitacao.js';
-import { Botao, Chip, EstadoVazio, Pagina } from '../../components/ui/index.js';
+import { Aviso, Botao, Chip, EstadoVazio, Pagina } from '../../components/ui/index.js';
 import { COMISSAO_TRAKTO } from '../../constants/negocio.js';
 import { pode } from '../../constants/permissoes.js';
 import { moeda } from '../../utils/formatadores.js';
@@ -16,22 +16,29 @@ const FILTROS = [
 
 // Proprietário: vê e responde apenas pedidos das PRÓPRIAS máquinas.
 // Admin: acompanha todos os pedidos da plataforma (somente leitura).
-export default function SolicitacoesRecebidas({ usuario, usuarios, maquinas, solicitacoes, alterarStatus }) {
+export default function SolicitacoesRecebidas({ usuario, solicitacoes, alterarStatus, recarregar, carregando, erroCarga }) {
   const [filtro, setFiltro] = useState('pendente');
+  const [erro, setErro] = useState('');
+  const [processando, setProcessando] = useState(null);
   const verTudo = pode(usuario, 'verTodasSolicitacoes');
   const podeResponder = pode(usuario, 'responderSolicitacoes');
 
-  const idsVisiveis = maquinas
-    .filter(function permitida(m) { return verTudo || m.proprietarioId === usuario.id; })
-    .map(function id(m) { return m.id; });
-  const visiveis = solicitacoes.filter(function v(s) { return verTudo || idsVisiveis.includes(s.maquinaId); });
+  // A API já devolve só o que este nível pode ver; o filtro abaixo é uma segunda garantia.
+  const visiveis = solicitacoes.filter(function v(s) { return verTudo || s.proprietarioId === usuario.id; });
   const lista = visiveis.filter(function f(s) { return filtro === 'todas' || s.status === filtro; });
 
   function contar(valor) {
     return visiveis.filter(function c(s) { return valor === 'todas' || s.status === valor; }).length;
   }
 
-  return <Pagina>
+  async function mudar(id, status, mensagem) {
+    setErro('');
+    setProcessando(id + status);
+    try { await alterarStatus(id, status, mensagem); } catch (e) { setErro(e.message); }
+    setProcessando(null);
+  }
+
+  return <Pagina aoAtualizar={recarregar} atualizando={carregando} erro={erroCarga}>
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={css.chips}>
       {FILTROS.map(function chip(f) {
         return <Chip key={f.valor} titulo={f.titulo + ' (' + contar(f.valor) + ')'} ativo={filtro === f.valor}
@@ -39,23 +46,22 @@ export default function SolicitacoesRecebidas({ usuario, usuarios, maquinas, sol
       })}
     </ScrollView>
 
-    {lista.length === 0 && <EstadoVazio icone="inbox-outline" titulo="Nada por aqui"
+    <Aviso mensagem={erro} />
+    {lista.length === 0 && !carregando && <EstadoVazio icone="inbox-outline" titulo="Nada por aqui"
       texto={verTudo ? 'Nenhuma solicitação com este status.' : 'Quando um produtor pedir uma das suas máquinas, o pedido aparece aqui.'} />}
 
     {lista.map(function cartao(s) {
-      const maquina = maquinas.find(function mesma(m) { return m.id === s.maquinaId; });
-      const produtor = usuarios.find(function mesmo(u) { return u.id === s.produtorId; });
-      return <CartaoSolicitacao key={s.id} solicitacao={s} maquina={maquina} pessoa={produtor} rotuloPessoa="Produtor">
-        {podeResponder && s.status === 'pendente' && <View style={css.acoes}>
+      return <CartaoSolicitacao key={s.id} solicitacao={s} pessoa={s.produtor} rotuloPessoa="Produtor">
+        {podeResponder && s.proprietarioId === usuario.id && s.status === 'pendente' && <View style={css.acoes}>
           <View style={{ flex: 1 }}><Botao titulo="Recusar" icone="close" variante="perigo" compacto
-            onPress={function recusar() { alterarStatus(s.id, 'recusada', 'Solicitação recusada.'); }} /></View>
+            carregando={processando === s.id + 'recusada'} onPress={function recusar() { mudar(s.id, 'recusada', 'Solicitação recusada.'); }} /></View>
           <View style={{ flex: 1 }}><Botao titulo="Aceitar" icone="check" compacto
-            onPress={function aceitar() { alterarStatus(s.id, 'aceita', 'Pedido aceito! O contato foi liberado.'); }} /></View>
+            carregando={processando === s.id + 'aceita'} onPress={function aceitar() { mudar(s.id, 'aceita', 'Pedido aceito! O contato foi liberado.'); }} /></View>
         </View>}
-        {podeResponder && s.status === 'aceita' && <>
+        {podeResponder && s.proprietarioId === usuario.id && s.status === 'aceita' && <>
           <Text style={css.repasse}>Você recebe {moeda(s.valorTotal * (1 - COMISSAO_TRAKTO))} (comissão TRAKTO de {Math.round(COMISSAO_TRAKTO * 100)}%).</Text>
           <Botao titulo="Marcar serviço como concluído" icone="flag-checkered" variante="suave" compacto
-            onPress={function concluir() { alterarStatus(s.id, 'concluida', 'Serviço concluído. Bom trabalho!'); }} />
+            carregando={processando === s.id + 'concluida'} onPress={function concluir() { mudar(s.id, 'concluida', 'Serviço concluído. Bom trabalho!'); }} />
         </>}
       </CartaoSolicitacao>;
     })}

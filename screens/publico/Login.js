@@ -1,12 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Logo from '../../components/Logo.js';
 import { Aviso, Botao, Campo, Cartao, Icone, Pagina, estilos } from '../../components/ui/index.js';
 import { NIVEIS } from '../../constants/permissoes.js';
+import { API_URL, verificarApi } from '../../services/api.js';
 import { cores, espaco, raio } from '../../theme/tema.js';
 
 // Atalhos de demonstração (Entrega 1): um para cada nível de usuário.
+// Senha das contas criadas por `npm run db:popular` (SENHA_DEMO em backend/.env).
+const SENHA_DEMO = 'trakto123';
+
 const CONTAS_DEMO = [
   { nivel: 'produtor', email: 'produtor@trakto.com' },
   { nivel: 'proprietario', email: 'proprietario@trakto.com' },
@@ -18,17 +22,30 @@ export default function Login({ navigation, aoEntrar, aviso }) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [erro, setErro] = useState('');
+  const [entrando, setEntrando] = useState(false);
+  const [statusApi, setStatusApi] = useState('verificando'); // verificando | online | offline
 
-  function realizarLogin() {
+  // Ao abrir a tela, confere se a API e o banco estão respondendo.
+  useEffect(function conferirApi() {
+    let ativo = true;
+    verificarApi()
+      .then(function ok() { if (ativo) { setStatusApi('online'); } })
+      .catch(function falha() { if (ativo) { setStatusApi('offline'); } });
+    return function cancelar() { ativo = false; };
+  }, []);
+
+  async function realizarLogin() {
     setErro('');
     if (!email.trim() || !senha) { setErro('Preencha o e-mail e a senha.'); return; }
-    const falha = aoEntrar(email.trim().toLowerCase(), senha);
+    setEntrando(true);
+    const falha = await aoEntrar(email.trim().toLowerCase(), senha);
+    setEntrando(false);
     if (falha) { setErro(falha); } else { setSenha(''); }
   }
 
   function preencherDemo(conta) {
     setEmail(conta.email);
-    setSenha('123456');
+    setSenha(SENHA_DEMO);
     setErro('');
   }
 
@@ -48,13 +65,14 @@ export default function Login({ navigation, aoEntrar, aviso }) {
       <Cartao style={css.formulario}>
         <Text style={estilos.titulo}>Entrar</Text>
         <Text style={estilos.subtitulo}>Acesse sua conta para continuar.</Text>
+        {statusApi === 'offline' && <Aviso tipo="erro" mensagem={'API fora do ar em ' + API_URL + '. Inicie com "npm run api" e confira o .env.'} />}
         <Aviso mensagem={aviso} tipo="sucesso" />
         <Aviso mensagem={erro} />
         <Campo rotulo="E-mail" icone="email-outline" value={email} onChangeText={setEmail} placeholder="voce@exemplo.com"
           keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoComplete="email" maxLength={150} />
         <Campo rotulo="Senha" icone="lock-outline" senha value={senha} onChangeText={setSenha} placeholder="Sua senha"
           autoCapitalize="none" onSubmitEditing={realizarLogin} />
-        <Botao titulo="Entrar" icone="login" onPress={realizarLogin} />
+        <Botao titulo="Entrar" icone="login" onPress={realizarLogin} carregando={entrando} />
         <View style={css.ou}><View style={estilos.separador} /><Text style={css.ouTexto}>ainda não tem conta?</Text><View style={estilos.separador} /></View>
         <Botao titulo="Criar conta grátis" icone="account-plus-outline" variante="secundario"
           onPress={function abrirCadastro() { navigation.navigate('CadastroUsuario'); }} />
@@ -65,7 +83,7 @@ export default function Login({ navigation, aoEntrar, aviso }) {
           <Icone nome="flask-outline" tamanho={18} cor={cores.trigoEscuro} />
           <Text style={css.demoTitulo}>Acesso de demonstração</Text>
         </View>
-        <Text style={estilos.pequeno}>Toque em um perfil para preencher o login (senha 123456).</Text>
+        <Text style={estilos.pequeno}>Toque em um perfil para preencher o login (senha {SENHA_DEMO}).</Text>
         <View style={css.demoLinha}>
           {CONTAS_DEMO.map(function botaoDemo(conta) {
             return <View key={conta.email} style={{ flexGrow: 1, flexBasis: 100 }}>
@@ -76,6 +94,10 @@ export default function Login({ navigation, aoEntrar, aviso }) {
         </View>
       </View>
 
+      <View style={css.status}>
+        <View style={[css.bolinha, { backgroundColor: statusApi === 'online' ? cores.sucesso : statusApi === 'offline' ? cores.erro : cores.trigo }]} />
+        <Text style={css.statusTexto}>{statusApi === 'online' ? 'Conectado à API e ao banco de dados' : statusApi === 'offline' ? 'API indisponível' : 'Verificando conexão…'}</Text>
+      </View>
       <Text style={css.rodape}>TRAKTO · Conectando quem precisa com quem tem</Text>
     </View>
   </Pagina>;
@@ -102,5 +124,8 @@ const css = StyleSheet.create({
   demo: { backgroundColor: cores.trigoClaro, borderRadius: raio.xl, padding: espaco.lg, gap: espaco.sm, borderWidth: 1, borderColor: '#F0DDB3' },
   demoTitulo: { color: cores.trigoEscuro, fontWeight: '800' },
   demoLinha: { flexDirection: 'row', flexWrap: 'wrap', gap: espaco.sm, marginTop: 4 },
+  status: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
+  bolinha: { width: 8, height: 8, borderRadius: 4 },
+  statusTexto: { color: cores.textoSuave, fontSize: 12, fontWeight: '600' },
   rodape: { color: cores.textoClaro, textAlign: 'center', fontSize: 11, letterSpacing: 0.5, marginTop: espaco.sm },
 });
