@@ -1,0 +1,88 @@
+### TRAKTO — testes manuais da API
+### Use com a extensão "REST Client" do VS Code (clique em "Send Request")
+### ou copie as requisições para o Postman/Insomnia.
+### ENTREGA 2: quem está logado é informado no cabeçalho X-Usuario-Id
+### (na Entrega 3 será substituído por Authorization: Bearer <JWT>).
+
+@api = http://localhost:3000
+
+### Status da API e do banco
+GET {{api}}/saude
+
+### Login (devolve o usuário com id e nível)
+POST {{api}}/auth/login
+Content-Type: application/json
+
+{ "email": "produtor@trakto.com", "senha": "trakto123" }
+
+### Cadastro de produtor
+POST {{api}}/auth/cadastro
+Content-Type: application/json
+
+{ "nome": "Carlos Teste", "email": "carlos@teste.com", "telefone": "(51) 98888-7777", "cidade": "Lajeado", "senha": "senha1234", "nivel": "produtor" }
+
+### Listar máquinas (como produtor, id 1)
+GET {{api}}/maquinas?disponivel=true
+X-Usuario-Id: 1
+
+### Filtrar por tipo e busca
+GET {{api}}/maquinas?tipo=Trator&busca=Lajeado
+X-Usuario-Id: 1
+
+### Detalhar uma máquina
+GET {{api}}/maquinas/1
+X-Usuario-Id: 1
+
+### Anunciar máquina (como proprietária, id 2)
+POST {{api}}/maquinas
+Content-Type: application/json
+X-Usuario-Id: 2
+
+{ "nome": "Plantadeira 5 linhas", "tipo": "Semeadeira", "potencia": "Tração 50 cv+", "cidade": "Estrela", "precoHora": 70, "disponivel": true, "comOperador": false, "descricao": "Plantadeira revisada." }
+
+### Editar máquina (somente o dono ou admin)
+PUT {{api}}/maquinas/1
+Content-Type: application/json
+X-Usuario-Id: 2
+
+{ "nome": "Trator Valtra A750", "tipo": "Trator", "potencia": "75 cv", "cidade": "Lajeado", "precoHora": 160, "disponivel": true, "comOperador": true, "descricao": "Revisado em 2026." }
+
+### Produtor tentando anunciar → 403
+POST {{api}}/maquinas
+Content-Type: application/json
+X-Usuario-Id: 1
+
+{ "nome": "Teste", "tipo": "Trator", "cidade": "Lajeado", "precoHora": 10 }
+
+### Solicitar aluguel (produtor) — o valor é calculado pela API
+POST {{api}}/solicitacoes
+Content-Type: application/json
+X-Usuario-Id: 1
+
+{ "maquinaId": 1, "dataServico": "2026-12-01", "horas": 6, "observacao": "Preparo de solo" }
+
+### Listar solicitações (cada nível vê só as suas)
+GET {{api}}/solicitacoes
+X-Usuario-Id: 2
+
+### Proprietária aceita a solicitação 1
+PATCH {{api}}/solicitacoes/1/status
+Content-Type: application/json
+X-Usuario-Id: 2
+
+{ "status": "aceita" }
+
+### Excluir máquina (bloqueado se houver aluguel pendente/aceito → 409)
+DELETE {{api}}/maquinas/1
+X-Usuario-Id: 2
+
+### Admin: listar usuários
+GET {{api}}/usuarios
+X-Usuario-Id: 3
+
+### Admin: alterar nível
+PATCH {{api}}/usuarios/5/nivel
+Content-Type: application/json
+X-Usuario-Id: 3
+
+{ "nivel": "proprietario" }
