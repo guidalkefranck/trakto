@@ -66,7 +66,7 @@ export default function Login({ navigation, aoEntrar, aviso }) {
         <Text style={estilos.titulo}>Entrar</Text>
         <Text style={estilos.subtitulo}>Acesse sua conta para continuar.</Text>
         {statusApi === 'offline' && <Aviso tipo="erro" mensagem={'API fora do ar em ' + API_URL + '. Inicie com "npm run api" e confira o .env.'} />}
-        <Aviso mensagem={aviso} tipo="sucesso" />
+        <Aviso mensagem={aviso} tipo={/expir|saiu desta/i.test(aviso) ? 'info' : 'sucesso'} />
         <Aviso mensagem={erro} />
         <Campo rotulo="E-mail" icone="email-outline" value={email} onChangeText={setEmail} placeholder="voce@exemplo.com"
           keyboardType="email-address" autoCapitalize="none" autoCorrect={false} autoComplete="email" maxLength={150} />
