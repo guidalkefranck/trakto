@@ -7,7 +7,7 @@ Aplicação mobile (React Native + Expo) que conecta **pequenos produtores rurai
 **Autor:** Guilherme Dalke — 3º ano do Ensino Médio Técnico
 **Projeto Avaliativo:** Aplicação Mobile com JWT e Níveis de Usuário
 
-![React Native](https://img.shields.io/badge/React%20Native-0.88-2E5B34) ![Expo](https://img.shields.io/badge/Expo-SDK%2058-2E5B34) ![React Navigation](https://img.shields.io/badge/React%20Navigation-7-E8A93A) ![Status](https://img.shields.io/badge/Entrega-2%20de%204-8B5E3C) ![Node](https://img.shields.io/badge/Node.js-Express%205-2E5B34) ![MySQL](https://img.shields.io/badge/MySQL-8-E8A93A)
+![React Native](https://img.shields.io/badge/React%20Native-0.88-2E5B34) ![Expo](https://img.shields.io/badge/Expo-SDK%2058-2E5B34) ![React Navigation](https://img.shields.io/badge/React%20Navigation-7-E8A93A) ![Status](https://img.shields.io/badge/Entrega-3%20de%204-8B5E3C) ![JWT](https://img.shields.io/badge/Auth-JWT%20%2B%20bcrypt-1C3A21) ![Node](https://img.shields.io/badge/Node.js-Express%205-2E5B34) ![MySQL](https://img.shields.io/badge/MySQL-8-E8A93A)
 
 > 📄 **Documento completo da proposta** — personas, requisitos funcionais e não funcionais, regras de negócio, modelo de dados e rotas da API: **[docs/PROPOSTA.md](docs/PROPOSTA.md)**
 
@@ -15,7 +15,7 @@ Aplicação mobile (React Native + Expo) que conecta **pequenos produtores rurai
 |---|---|---|
 | 1 | Proposta, estrutura inicial, telas e navegação | ✅ Entregue |
 | 2 | Modelagem, MySQL, API Express e integração com `fetch()` | ✅ Entregue — veja **[docs/ENTREGA2.md](docs/ENTREGA2.md)** |
-| 3 | Cadastro, login, hash, JWT, níveis, rotas protegidas e CRUD completo | ⏳ |
+| 3 | Cadastro, login, hash, JWT, níveis, rotas protegidas e CRUD completo | ✅ Entregue — veja **[docs/ENTREGA3.md](docs/ENTREGA3.md)** |
 | 4 | Testes, correções, APK e apresentação | ⏳ |
 
 ---
@@ -213,8 +213,8 @@ npm install
 
 # 2. Banco de dados: abra database/trakto.sql no MySQL Workbench e execute (⚡)
 
-# 3. Configuração da API: copie backend/.env.example para backend/.env
-#    e coloque a senha do SEU MySQL em DB_PASSWORD
+# 3. Configuração da API: copie backend/.env.example para backend/.env,
+#    coloque a senha do SEU MySQL em DB_PASSWORD e um segredo em JWT_SECRET
 copy backend\.env.example backend\.env        # Windows  (Linux/Mac: cp)
 
 # 4. Dados de demonstração (contas, máquinas e pedidos; senhas em hash)
@@ -229,7 +229,11 @@ npx expo start         # w = navegador · QR Code = Expo Go
 
 **No celular (Expo Go):** copie `.env.example` para `.env` na raiz e troque `localhost` pelo IP do computador (comando `ipconfig`), por exemplo `EXPO_PUBLIC_API_URL=http://192.168.0.15:3000`. Celular e computador precisam estar no mesmo Wi-Fi.
 
-**Testes:** `npm test` (validações da API) · exemplos de chamadas em [`backend/requisicoes.http`](backend/requisicoes.http).
+**JWT_SECRET:** gere um segredo com `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` e cole em `backend/.env`. Sem ele a API não inicia (de propósito).
+
+**Testes:** `npm test` (unitários: JWT e validações) · `npm run test:api` (37 verificações de ponta a ponta, com a API rodando) · chamadas manuais em [`backend/requisicoes.http`](backend/requisicoes.http).
+
+> Atualizando da Entrega 2? Execute de novo `database/trakto.sql` no Workbench (cria a tabela `tokens_revogados` sem apagar dados) e acrescente `JWT_SECRET` e `JWT_EXPIRA_EM` ao seu `backend/.env`.
 
 ### Contas de demonstração
 
