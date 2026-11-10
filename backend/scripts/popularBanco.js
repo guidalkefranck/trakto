@@ -3,7 +3,7 @@
 // As senhas são gravadas com hash bcrypt (o valor original fica só no .env).
 import bcrypt from 'bcryptjs';
 import pool from '../database/conexao.js';
-import { validarBanco } from '../config/ambiente.js';
+import { explicarErroBanco, validarBanco } from '../config/ambiente.js';
 
 const USUARIOS = [
   { nome: 'João Schneider', email: 'produtor@trakto.com', telefone: '(51) 99999-1001', cidade: 'Lajeado', nivel: 'produtor' },
@@ -102,7 +102,7 @@ async function popular() {
 
 popular()
   .catch(function falhou(erro) {
-    console.error('❌ Não foi possível popular o banco: ' + (erro.code === 'ER_NO_SUCH_TABLE' ? 'execute database/trakto.sql primeiro.' : erro.code || erro.message));
+    console.error('❌ Não foi possível popular o banco: ' + explicarErroBanco(erro));
     process.exitCode = 1;
   })
   .finally(function encerrar() { return pool.end(); });

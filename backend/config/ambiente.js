@@ -29,6 +29,18 @@ export function validarJwt() {
   }
 }
 
+// Explica em português os erros mais comuns de conexão com o MySQL.
+export function explicarErroBanco(erro) {
+  const dicas = {
+    ECONNREFUSED: 'o MySQL recusou a conexão em ' + process.env.DB_HOST + ':' + (process.env.DB_PORT || 3306) + '. Confira se o MySQL está ligado, a porta (DB_PORT) e use DB_HOST=127.0.0.1 no backend/.env.',
+    ER_ACCESS_DENIED_ERROR: 'usuário ou senha do MySQL incorretos. Confira DB_USER e DB_PASSWORD no backend/.env.',
+    ER_BAD_DB_ERROR: 'o banco "' + process.env.DB_NAME + '" não existe. Execute database/trakto.sql no MySQL Workbench.',
+    ER_NO_SUCH_TABLE: 'faltam tabelas. Execute database/trakto.sql no MySQL Workbench.',
+    ETIMEDOUT: 'o MySQL não respondeu. Confira DB_HOST e DB_PORT no backend/.env.',
+  };
+  return dicas[erro && erro.code] || (erro && (erro.code || erro.message)) || 'erro desconhecido';
+}
+
 export default function validarAmbiente() {
   validarBanco();
   validarJwt();

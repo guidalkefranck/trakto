@@ -1,5 +1,5 @@
 import app from './app.js';
-import validarAmbiente from './config/ambiente.js';
+import validarAmbiente, { explicarErroBanco } from './config/ambiente.js';
 import pool from './database/conexao.js';
 
 try {
@@ -13,8 +13,7 @@ try {
       await pool.query('SELECT 1');
       console.log('✅ Conectada ao MySQL (banco "' + process.env.DB_NAME + '").');
     } catch (erro) {
-      console.error('⚠️  Não foi possível conectar ao MySQL: ' + (erro.code || erro.message));
-      console.error('   Confira se o MySQL está ligado, se database/trakto.sql foi executado e os dados de backend/.env.');
+      console.error('⚠️  Não foi possível conectar ao MySQL: ' + explicarErroBanco(erro));
     }
   });
 
