@@ -7,19 +7,25 @@
 
 export const API_URL = (process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000').replace(/\/+$/, '');
 
-// ENTREGA 2: identificamos quem está logado pelo cabeçalho X-Usuario-Id.
-// ENTREGA 3: aqui passará a ir "Authorization: Bearer <token JWT>".
-let usuarioLogadoId = null;
+// Token JWT da sessão atual. Vai em toda requisição como
+//   Authorization: Bearer <token>
+let tokenAtual = null;
+// Chamado quando a API recusa o token (expirado, revogado ou inválido).
+let aoSessaoExpirar = null;
 
-export function definirSessao(usuario) {
-  usuarioLogadoId = usuario ? usuario.id : null;
+export function definirToken(token) {
+  tokenAtual = token || null;
+}
+
+export function quandoSessaoExpirar(callback) {
+  aoSessaoExpirar = callback;
 }
 
 // Função central: monta a requisição, trata erros de rede e lê a resposta JSON.
 async function requisicao(caminho, { metodo = 'GET', corpo = undefined } = {}) {
   const cabecalhos = { Accept: 'application/json' };
   if (corpo !== undefined) { cabecalhos['Content-Type'] = 'application/json'; }
-  if (usuarioLogadoId) { cabecalhos['X-Usuario-Id'] = String(usuarioLogadoId); }
+  if (tokenAtual) { cabecalhos.Authorization = 'Bearer ' + tokenAtual; }
 
   let resposta;
   try {
@@ -35,6 +41,11 @@ async function requisicao(caminho, { metodo = 'GET', corpo = undefined } = {}) {
 
   let dados = null;
   try { dados = await resposta.json(); } catch { dados = null; }
+
+  // 401 com token enviado = sessão não vale mais → o App faz logout e volta ao login.
+  if (resposta.status === 401 && tokenAtual && aoSessaoExpirar) {
+    aoSessaoExpirar((dados && dados.mensagem) || 'Sua sessão expirou. Entre novamente.');
+  }
 
   if (!resposta.ok) {
     throw new ErroApi((dados && dados.mensagem) || 'A API respondeu com erro ' + resposta.status + '.', resposta.status);
@@ -63,6 +74,8 @@ export function verificarApi() { return requisicao('/saude'); }
 // ----- Autenticação -----
 export function login(email, senha) { return requisicao('/auth/login', { metodo: 'POST', corpo: { email, senha } }); }
 export function cadastrar(dados) { return requisicao('/auth/cadastro', { metodo: 'POST', corpo: dados }); }
+export function sessaoAtual() { return requisicao('/auth/me'); }
+export function logout() { return requisicao('/auth/logout', { metodo: 'POST' }); }
 
 // ----- Máquinas (CRUD da entidade principal) -----
 export function listarMaquinas(filtros) { return requisicao('/maquinas' + query(filtros)); }
