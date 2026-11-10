@@ -1,88 +1,109 @@
-### TRAKTO — testes manuais da API
-### Use com a extensão "REST Client" do VS Code (clique em "Send Request")
-### ou copie as requisições para o Postman/Insomnia.
-### ENTREGA 2: quem está logado é informado no cabeçalho X-Usuario-Id
-### (na Entrega 3 será substituído por Authorization: Bearer <JWT>).
+### TRAKTO — testes manuais da API (Entrega 3: JWT)
+### Use com a extensão "REST Client" do VS Code (clique em "Send Request").
+### Rode primeiro os três logins: os tokens são reaproveitados nas outras chamadas.
 
 @api = http://localhost:3000
 
 ### Status da API e do banco
 GET {{api}}/saude
 
-### Login (devolve o usuário com id e nível)
+### Cadastro (senha vira hash bcrypt; "nivel": "admin" é ignorado)
+POST {{api}}/auth/cadastro
+Content-Type: application/json
+
+{ "nome": "Carlos Teste", "email": "carlos@teste.com", "telefone": "(51) 98888-7777", "cidade": "Lajeado", "senha": "senha1234", "nivel": "admin" }
+
+### Login do PRODUTOR → recebe o JWT
+# @name loginProdutor
 POST {{api}}/auth/login
 Content-Type: application/json
 
 { "email": "produtor@trakto.com", "senha": "trakto123" }
 
-### Cadastro de produtor
-POST {{api}}/auth/cadastro
+### Login da PROPRIETÁRIA
+# @name loginProprietario
+POST {{api}}/auth/login
 Content-Type: application/json
 
-{ "nome": "Carlos Teste", "email": "carlos@teste.com", "telefone": "(51) 98888-7777", "cidade": "Lajeado", "senha": "senha1234", "nivel": "produtor" }
+{ "email": "proprietario@trakto.com", "senha": "trakto123" }
 
-### Listar máquinas (como produtor, id 1)
+### Login do ADMIN
+# @name loginAdmin
+POST {{api}}/auth/login
+Content-Type: application/json
+
+{ "email": "admin@trakto.com", "senha": "trakto123" }
+
+@produtor = {{loginProdutor.response.body.token}}
+@proprietario = {{loginProprietario.response.body.token}}
+@admin = {{loginAdmin.response.body.token}}
+
+### Sem token → 401
+GET {{api}}/maquinas
+
+### Token falso → 401
+GET {{api}}/maquinas
+Authorization: Bearer token.falso.123
+
+### Quem sou eu (valida o token)
+GET {{api}}/auth/me
+Authorization: Bearer {{produtor}}
+
+### READ — listar máquinas disponíveis
 GET {{api}}/maquinas?disponivel=true
-X-Usuario-Id: 1
+Authorization: Bearer {{produtor}}
 
-### Filtrar por tipo e busca
-GET {{api}}/maquinas?tipo=Trator&busca=Lajeado
-X-Usuario-Id: 1
-
-### Detalhar uma máquina
-GET {{api}}/maquinas/1
-X-Usuario-Id: 1
-
-### Anunciar máquina (como proprietária, id 2)
+### CREATE — proprietária anuncia
 POST {{api}}/maquinas
 Content-Type: application/json
-X-Usuario-Id: 2
+Authorization: Bearer {{proprietario}}
 
 { "nome": "Plantadeira 5 linhas", "tipo": "Semeadeira", "potencia": "Tração 50 cv+", "cidade": "Estrela", "precoHora": 70, "disponivel": true, "comOperador": false, "descricao": "Plantadeira revisada." }
 
-### Editar máquina (somente o dono ou admin)
-PUT {{api}}/maquinas/1
-Content-Type: application/json
-X-Usuario-Id: 2
-
-{ "nome": "Trator Valtra A750", "tipo": "Trator", "potencia": "75 cv", "cidade": "Lajeado", "precoHora": 160, "disponivel": true, "comOperador": true, "descricao": "Revisado em 2026." }
-
-### Produtor tentando anunciar → 403
+### CREATE pelo produtor → 403 (nível sem permissão)
 POST {{api}}/maquinas
 Content-Type: application/json
-X-Usuario-Id: 1
+Authorization: Bearer {{produtor}}
 
 { "nome": "Teste", "tipo": "Trator", "cidade": "Lajeado", "precoHora": 10 }
 
-### Solicitar aluguel (produtor) — o valor é calculado pela API
+### UPDATE — só o dono (ou admin)
+PUT {{api}}/maquinas/7
+Content-Type: application/json
+Authorization: Bearer {{proprietario}}
+
+{ "nome": "Trator Massey Ferguson 275", "tipo": "Trator", "potencia": "75 cv", "cidade": "Lajeado", "precoHora": 140, "disponivel": true, "comOperador": false, "descricao": "Revisado." }
+
+### Solicitar aluguel (produtor)
 POST {{api}}/solicitacoes
 Content-Type: application/json
-X-Usuario-Id: 1
+Authorization: Bearer {{produtor}}
 
-{ "maquinaId": 1, "dataServico": "2026-12-01", "horas": 6, "observacao": "Preparo de solo" }
-
-### Listar solicitações (cada nível vê só as suas)
-GET {{api}}/solicitacoes
-X-Usuario-Id: 2
+{ "maquinaId": 1, "dataServico": "2026-12-15", "horas": 6, "observacao": "Preparo de solo" }
 
 ### Proprietária aceita a solicitação 1
 PATCH {{api}}/solicitacoes/1/status
 Content-Type: application/json
-X-Usuario-Id: 2
+Authorization: Bearer {{proprietario}}
 
 { "status": "aceita" }
 
-### Excluir máquina (bloqueado se houver aluguel pendente/aceito → 409)
-DELETE {{api}}/maquinas/1
-X-Usuario-Id: 2
-
-### Admin: listar usuários
+### Admin lista usuários / produtor tenta → 403
 GET {{api}}/usuarios
-X-Usuario-Id: 3
+Authorization: Bearer {{admin}}
 
-### Admin: alterar nível
-PATCH {{api}}/usuarios/5/nivel
-Content-Type: application/json
-X-Usuario-Id: 3
+###
+GET {{api}}/usuarios
+Authorization: Bearer {{produtor}}
 
-{ "nivel": "proprietario" }
+### DELETE — excluir máquina sem aluguel ativo
+DELETE {{api}}/maquinas/7
+Authorization: Bearer {{proprietario}}
+
+### LOGOUT — revoga o token do produtor
+POST {{api}}/auth/logout
+Authorization: Bearer {{produtor}}
+
+### Mesmo token depois do logout → 401
+GET {{api}}/auth/me
+Authorization: Bearer {{produtor}}
