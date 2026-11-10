@@ -1,10 +1,16 @@
 import { Router } from 'express';
-import { cadastrar, login } from '../controllers/authController.js';
+import { cadastrar, eu, login, logout } from '../controllers/authController.js';
+import autenticarToken from '../middlewares/autenticarToken.js';
+import { limitarTentativas } from '../middlewares/limitarTentativas.js';
 
 const router = Router();
 
-// Rotas públicas: qualquer pessoa pode criar conta e entrar.
+// Públicas: criar conta e entrar.
 router.post('/cadastro', cadastrar);
-router.post('/login', login);
+router.post('/login', limitarTentativas, login);
+
+// Protegidas: exigem Authorization: Bearer <token>.
+router.get('/me', autenticarToken, eu);
+router.post('/logout', autenticarToken, logout);
 
 export default router;

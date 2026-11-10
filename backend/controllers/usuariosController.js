@@ -28,8 +28,3 @@ export async function alterarNivel(req, res, next) {
     return res.json({ mensagem: 'Nível atualizado.', usuario: linhas[0] });
   } catch (e) { return next(e); }
 }
-
-// GET /usuarios/eu — dados atualizados de quem está logado.
-export function eu(req, res) {
-  return res.json(req.usuario);
-}

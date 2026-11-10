@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { atualizar, criar, detalhar, excluir, listar } from '../controllers/maquinasController.js';
-import identificarUsuario from '../middlewares/identificarUsuario.js';
+import autenticarToken from '../middlewares/autenticarToken.js';
 import exigirPermissao from '../middlewares/exigirPermissao.js';
 
 const router = Router();
 
-router.use(identificarUsuario);
+// Todas as rotas abaixo exigem um JWT válido (Bearer Token).
+router.use(autenticarToken);
 
 // CRUD da entidade principal.
 router.get('/', exigirPermissao('buscarMaquinas'), listar);
