@@ -233,6 +233,8 @@ npx expo start         # w = navegador · QR Code = Expo Go
 
 **Testes:** `npm test` (unitários: JWT e validações) · `npm run test:api` (37 verificações de ponta a ponta, com a API rodando) · chamadas manuais em [`backend/requisicoes.http`](backend/requisicoes.http).
 
+> **Erro `ECONNREFUSED`?** Confira no Workbench a porta da conexão (pode ser 3306 ou 3307) e ajuste `DB_PORT` no `backend/.env`.
+
 > Atualizando da Entrega 2? Execute de novo `database/trakto.sql` no Workbench (cria a tabela `tokens_revogados` sem apagar dados) e acrescente `JWT_SECRET` e `JWT_EXPIRA_EM` ao seu `backend/.env`.
 
 ### Contas de demonstração

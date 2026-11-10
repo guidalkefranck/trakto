@@ -58,6 +58,21 @@ CADASTRO ──▶ LOGIN ──▶ JWT ──▶ NÍVEL ──▶ PERMISSÃO ─
 | `npm run test:api` | **37 verificações de ponta a ponta** com a API rodando e o MySQL: cadastro, hash, login, JWT, 401/403, CRUD completo, ciclo de status e logout |
 | [`backend/requisicoes.http`](../backend/requisicoes.http) | Chamadas manuais no VS Code (REST Client) já usando os tokens |
 
+### Resultado da execução (10/11/2026, MySQL do laboratório)
+
+```
+> npm run test:api
+🚜 Testando a API TRAKTO em http://localhost:3000
+...
+✅ 37 verificações passaram, 0 falharam.
+```
+
+### Problema encontrado e corrigido durante os testes
+
+| Sintoma | Causa | Correção |
+|---|---|---|
+| `npm run db:popular` → `ECONNREFUSED` | O MySQL do laboratório usa a porta **3307**, e o `.env` apontava para 3306. | `DB_PORT=3307` no `backend/.env`. A API agora explica cada erro de conexão em português (porta, senha, banco inexistente) e o `.env.example` usa `127.0.0.1` para evitar o problema de IPv6 do Node no Windows. |
+
 ## 6. Mudanças em relação à Entrega 2
 
 - `identificarUsuario` (cabeçalho `X-Usuario-Id`, provisório) foi **removido** e substituído por `autenticarToken` (JWT). Controllers e permissões não precisaram mudar.
