@@ -41,7 +41,9 @@ export default function Home({ navigation, usuario, usuarios, maquinas, solicita
     <View style={[css.topo, { paddingTop: insets.top + espaco.lg }]}>
       <View style={css.topoInterno}>
       <View style={css.linhaTopo}>
-        <Avatar nome={usuario.nome} tamanho={46} claro />
+        <Pressable accessibilityRole="button" accessibilityLabel="Abrir meu perfil" onPress={ir('Perfil')}>
+          <Avatar nome={usuario.nome} tamanho={46} claro />
+        </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={css.saudacao}>{saudacao()},</Text>
           <Text style={css.nome}>{primeiroNome(usuario.nome)}</Text>
@@ -121,6 +123,7 @@ export default function Home({ navigation, usuario, usuarios, maquinas, solicita
         </View>
       </>}
 
+      <Botao titulo="Meu perfil e sessão" icone="account-circle-outline" variante="secundario" onPress={ir('Perfil')} />
       <Botao titulo="Sair da conta" icone="logout" variante="secundario" onPress={sair} />
     </View>
   </Pagina>;

@@ -8,6 +8,7 @@ import CadastroUsuario from '../screens/publico/CadastroUsuario.js';
 import Home from '../screens/comum/Home.js';
 import Maquinas from '../screens/comum/Maquinas.js';
 import DetalhesMaquina from '../screens/comum/DetalhesMaquina.js';
+import Perfil from '../screens/comum/Perfil.js';
 import SolicitarAluguel from '../screens/produtor/SolicitarAluguel.js';
 import MinhasSolicitacoes from '../screens/produtor/MinhasSolicitacoes.js';
 import MinhasMaquinas from '../screens/proprietario/MinhasMaquinas.js';
@@ -22,6 +23,7 @@ const Stack = createNativeStackNavigator();
 // permissao: null = qualquer usuário logado; lista = basta ter uma delas.
 const ROTAS_PRIVADAS = [
   { nome: 'Home', tela: Home, titulo: 'Início', permissao: null, semCabecalho: true },
+  { nome: 'Perfil', tela: Perfil, titulo: 'Meu perfil', permissao: null },
   { nome: 'Maquinas', tela: Maquinas, titulo: 'Máquinas', permissao: ['buscarMaquinas'] },
   { nome: 'DetalhesMaquina', tela: DetalhesMaquina, titulo: 'Detalhes', permissao: ['buscarMaquinas'] },
   { nome: 'SolicitarAluguel', tela: SolicitarAluguel, titulo: 'Solicitar aluguel', permissao: ['solicitarAluguel'] },
