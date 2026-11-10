@@ -18,8 +18,20 @@ export function validarBanco() {
   validarPorta('DB_PORT', process.env.DB_PORT || 3306);
 }
 
+// O segredo do JWT é obrigatório: sem ele qualquer um poderia forjar tokens.
+export function validarJwt() {
+  const segredo = process.env.JWT_SECRET || '';
+  if (segredo.length < 32 || segredo.startsWith('troque-por')) {
+    throw new Error('Defina JWT_SECRET em backend/.env com pelo menos 32 caracteres aleatórios (veja backend/.env.example).');
+  }
+  if (!/^\d+[smhd]$/.test(process.env.JWT_EXPIRA_EM || '8h')) {
+    throw new Error('JWT_EXPIRA_EM deve ser algo como 30m, 8h ou 1d.');
+  }
+}
+
 export default function validarAmbiente() {
   validarBanco();
+  validarJwt();
   validarPorta('PORT', process.env.PORT || 3000);
 }
 
