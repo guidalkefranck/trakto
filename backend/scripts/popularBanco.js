@@ -55,7 +55,7 @@ async function popular() {
     if (total > 0) {
       // TRUNCATE zera também os IDs (usuário 1 = produtor, 2 = proprietária, 3 = admin...).
       await conexao.query('SET FOREIGN_KEY_CHECKS = 0');
-      for (const tabela of ['solicitacoes', 'maquinas', 'usuarios']) { await conexao.query('TRUNCATE TABLE ' + tabela); }
+      for (const tabela of ['tokens_revogados', 'solicitacoes', 'maquinas', 'usuarios']) { await conexao.query('TRUNCATE TABLE ' + tabela); }
       await conexao.query('SET FOREIGN_KEY_CHECKS = 1');
     }
     // Transação: ou entra tudo, ou nada.

@@ -93,9 +93,25 @@ CREATE TABLE IF NOT EXISTS solicitacoes (
 ) ENGINE=InnoDB;
 
 -- ---------------------------------------------------------------------
+-- TOKENS_REVOGADOS — logout real no servidor (Entrega 3)
+-- O JWT não tem estado: até expirar, ele continuaria válido. No logout, o
+-- identificador único do token (jti) é guardado aqui e a API passa a recusá-lo.
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS tokens_revogados (
+  jti          CHAR(36)      NOT NULL,
+  usuario_id   INT UNSIGNED  NOT NULL,
+  expira_em    DATETIME      NOT NULL,
+  revogado_em  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (jti),
+  CONSTRAINT fk_tokens_usuario FOREIGN KEY (usuario_id)
+    REFERENCES usuarios (id) ON DELETE CASCADE,
+  INDEX idx_tokens_expira (expira_em)
+) ENGINE=InnoDB;
+
+-- ---------------------------------------------------------------------
 -- Consultas úteis para conferir os dados no Workbench
 -- ---------------------------------------------------------------------
--- SELECT id, nome, email, nivel, cidade FROM usuarios;
+-- SELECT id, nome, email, nivel, cidade, LEFT(senha, 7) AS inicio_do_hash FROM usuarios;  -- "$2b$10$" = bcrypt
 -- SELECT m.id, m.nome, m.tipo, m.preco_hora, u.nome AS proprietario
 --   FROM maquinas m JOIN usuarios u ON u.id = m.proprietario_id;
 -- SELECT s.id, m.nome AS maquina, p.nome AS produtor, s.data_servico, s.horas, s.valor_total, s.status
