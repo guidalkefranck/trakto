@@ -71,7 +71,7 @@ Marque ✅ ao testar no **APK** (ou no navegador com `npx expo start` → `w`).
 
 ## 4. Roteiro da apresentação (≈ 10 min)
 
-Slides: link no README. Ordem sugerida, seguindo os itens de "Apresentação e defesa" do enunciado:
+Slides: https://claude.ai/artifact/V9QhZTiBBwM2Zm7s9W6Nw4 (cada slide tem notas do apresentador). Ordem sugerida, seguindo os itens de "Apresentação e defesa" do enunciado:
 
 1. **Problema** (1 min) — agricultura familiar sem máquina própria × máquinas paradas; dados do IBGE e pesquisa.
 2. **Solução** (1 min) — TRAKTO conecta quem precisa com quem tem; 3 perfis.
