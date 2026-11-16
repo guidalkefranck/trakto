@@ -7,8 +7,10 @@ Aplicação mobile (React Native + Expo) que conecta **pequenos produtores rurai
 **Autor:** Guilherme Dalke — 3º ano do Ensino Médio Técnico
 **Projeto Avaliativo:** Aplicação Mobile com JWT e Níveis de Usuário
 
-![React Native](https://img.shields.io/badge/React%20Native-0.88-2E5B34) ![Expo](https://img.shields.io/badge/Expo-SDK%2058-2E5B34) ![React Navigation](https://img.shields.io/badge/React%20Navigation-7-E8A93A) ![Status](https://img.shields.io/badge/Entrega-3%20de%204-8B5E3C) ![JWT](https://img.shields.io/badge/Auth-JWT%20%2B%20bcrypt-1C3A21) ![Node](https://img.shields.io/badge/Node.js-Express%205-2E5B34) ![MySQL](https://img.shields.io/badge/MySQL-8-E8A93A)
+![React Native](https://img.shields.io/badge/React%20Native-0.88-2E5B34) ![Expo](https://img.shields.io/badge/Expo-SDK%2058-2E5B34) ![React Navigation](https://img.shields.io/badge/React%20Navigation-7-E8A93A) ![Versão](https://img.shields.io/badge/vers%C3%A3o-1.0.0-2E5B34) ![Status](https://img.shields.io/badge/Entrega-4%20de%204-8B5E3C) ![JWT](https://img.shields.io/badge/Auth-JWT%20%2B%20bcrypt-1C3A21) ![Node](https://img.shields.io/badge/Node.js-Express%205-2E5B34) ![MySQL](https://img.shields.io/badge/MySQL-8-E8A93A)
 
+> 📱 **APK (Android):** aba [Releases](https://github.com/guidalkefranck/trakto/releases) → versão **v1.0.0** · instalação e conexão em [docs/ENTREGA4.md](docs/ENTREGA4.md#2-gerando-o-apk)
+>
 > 📄 **Documento completo da proposta** — personas, requisitos funcionais e não funcionais, regras de negócio, modelo de dados e rotas da API: **[docs/PROPOSTA.md](docs/PROPOSTA.md)**
 
 | Entrega | Conteúdo | Situação |
@@ -16,7 +18,7 @@ Aplicação mobile (React Native + Expo) que conecta **pequenos produtores rurai
 | 1 | Proposta, estrutura inicial, telas e navegação | ✅ Entregue |
 | 2 | Modelagem, MySQL, API Express e integração com `fetch()` | ✅ Entregue — veja **[docs/ENTREGA2.md](docs/ENTREGA2.md)** |
 | 3 | Cadastro, login, hash, JWT, níveis, rotas protegidas e CRUD completo | ✅ Entregue — veja **[docs/ENTREGA3.md](docs/ENTREGA3.md)** |
-| 4 | Testes, correções, APK e apresentação | ⏳ |
+| 4 | Testes, correções, APK e apresentação | ✅ Entregue — veja **[docs/ENTREGA4.md](docs/ENTREGA4.md)** |
 
 ---
 
@@ -114,6 +116,7 @@ Produtor solicita ──► PENDENTE ──► Proprietário aceita ──► AC
 | 9 | Cadastrar / editar máquina | `screens/proprietario/FormularioMaquina.js` | proprietário, admin |
 | 10 | Solicitações recebidas | `screens/proprietario/SolicitacoesRecebidas.js` | proprietário, admin |
 | 11 | Gerenciar usuários | `screens/admin/Usuarios.js` | admin |
+| 12 | Meu perfil (dados, sessão JWT, permissões, sair) | `screens/comum/Perfil.js` | todos logados |
 
 ## 8. Fluxo de navegação
 
@@ -154,9 +157,9 @@ trakto/
 ├── app.json                  # nome, ícones, splash e pacote Android
 ├── navigation/
 │   └── Rotas.js              # React Navigation: rotas públicas e privadas guiadas por permissão
-├── screens/                  # telas agrupadas por perfil de acesso
+├── screens/                  # 12 telas agrupadas por perfil de acesso
 │   ├── publico/              # Login, CadastroUsuario
-│   ├── comum/                # Home, Maquinas, DetalhesMaquina
+│   ├── comum/                # Home, Maquinas, DetalhesMaquina, Perfil
 │   ├── produtor/             # SolicitarAluguel, MinhasSolicitacoes
 │   ├── proprietario/         # MinhasMaquinas, FormularioMaquina, SolicitacoesRecebidas
 │   └── admin/                # Usuarios
@@ -230,6 +233,8 @@ npx expo start         # w = navegador · QR Code = Expo Go
 **No celular (Expo Go):** copie `.env.example` para `.env` na raiz e troque `localhost` pelo IP do computador (comando `ipconfig`), por exemplo `EXPO_PUBLIC_API_URL=http://192.168.0.15:3000`. Celular e computador precisam estar no mesmo Wi-Fi.
 
 **JWT_SECRET:** gere um segredo com `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` e cole em `backend/.env`. Sem ele a API não inicia (de propósito).
+
+**APK / celular:** na tela de login, toque no status da conexão e informe o IP do computador que roda a API (ex.: `192.168.0.15:3000`). Passo a passo e firewall em [docs/ENTREGA4.md](docs/ENTREGA4.md#2-gerando-o-apk).
 
 **Testes:** `npm test` (unitários: JWT e validações) · `npm run test:api` (37 verificações de ponta a ponta, com a API rodando) · chamadas manuais em [`backend/requisicoes.http`](backend/requisicoes.http).
 
