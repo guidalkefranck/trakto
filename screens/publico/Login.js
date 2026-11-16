@@ -4,7 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Logo from '../../components/Logo.js';
 import { Aviso, Botao, Campo, Cartao, Icone, Pagina, estilos } from '../../components/ui/index.js';
 import { NIVEIS } from '../../constants/permissoes.js';
-import { API_URL, verificarApi } from '../../services/api.js';
+import ConfiguracaoServidor from '../../components/ConfiguracaoServidor.js';
+import { obterApiUrl, verificarApi } from '../../services/api.js';
 import { cores, espaco, raio } from '../../theme/tema.js';
 
 // Atalhos de demonstração (Entrega 1): um para cada nível de usuário.
@@ -24,15 +25,17 @@ export default function Login({ navigation, aoEntrar, aviso }) {
   const [erro, setErro] = useState('');
   const [entrando, setEntrando] = useState(false);
   const [statusApi, setStatusApi] = useState('verificando'); // verificando | online | offline
+  const [versaoServidor, setVersaoServidor] = useState(0);
 
-  // Ao abrir a tela, confere se a API e o banco estão respondendo.
+  // Ao abrir a tela (e ao trocar o servidor), confere se a API e o banco respondem.
   useEffect(function conferirApi() {
     let ativo = true;
+    setStatusApi('verificando');
     verificarApi()
       .then(function ok() { if (ativo) { setStatusApi('online'); } })
       .catch(function falha() { if (ativo) { setStatusApi('offline'); } });
     return function cancelar() { ativo = false; };
-  }, []);
+  }, [versaoServidor]);
 
   async function realizarLogin() {
     setErro('');
@@ -65,7 +68,7 @@ export default function Login({ navigation, aoEntrar, aviso }) {
       <Cartao style={css.formulario}>
         <Text style={estilos.titulo}>Entrar</Text>
         <Text style={estilos.subtitulo}>Acesse sua conta para continuar.</Text>
-        {statusApi === 'offline' && <Aviso tipo="erro" mensagem={'API fora do ar em ' + API_URL + '. Inicie com "npm run api" e confira o .env.'} />}
+        {statusApi === 'offline' && <Aviso tipo="erro" mensagem={'Sem conexão com a API em ' + obterApiUrl() + '. Confira se ela está rodando ou ajuste o servidor abaixo.'} />}
         <Aviso mensagem={aviso} tipo={/expir|saiu desta/i.test(aviso) ? 'info' : 'sucesso'} />
         <Aviso mensagem={erro} />
         <Campo rotulo="E-mail" icone="email-outline" value={email} onChangeText={setEmail} placeholder="voce@exemplo.com"
@@ -94,10 +97,7 @@ export default function Login({ navigation, aoEntrar, aviso }) {
         </View>
       </View>
 
-      <View style={css.status}>
-        <View style={[css.bolinha, { backgroundColor: statusApi === 'online' ? cores.sucesso : statusApi === 'offline' ? cores.erro : cores.trigo }]} />
-        <Text style={css.statusTexto}>{statusApi === 'online' ? 'Conectado à API e ao banco de dados' : statusApi === 'offline' ? 'API indisponível' : 'Verificando conexão…'}</Text>
-      </View>
+      <ConfiguracaoServidor status={statusApi} aoAlterar={function trocou() { setVersaoServidor(versaoServidor + 1); }} />
       <Text style={css.rodape}>TRAKTO · Conectando quem precisa com quem tem</Text>
     </View>
   </Pagina>;
@@ -124,8 +124,5 @@ const css = StyleSheet.create({
   demo: { backgroundColor: cores.trigoClaro, borderRadius: raio.xl, padding: espaco.lg, gap: espaco.sm, borderWidth: 1, borderColor: '#F0DDB3' },
   demoTitulo: { color: cores.trigoEscuro, fontWeight: '800' },
   demoLinha: { flexDirection: 'row', flexWrap: 'wrap', gap: espaco.sm, marginTop: 4 },
-  status: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  bolinha: { width: 8, height: 8, borderRadius: 4 },
-  statusTexto: { color: cores.textoSuave, fontSize: 12, fontWeight: '600' },
   rodape: { color: cores.textoClaro, textAlign: 'center', fontSize: 11, letterSpacing: 0.5, marginTop: espaco.sm },
 });

@@ -15,6 +15,7 @@ import { Toast } from './components/ui/index.js';
 import { pode } from './constants/permissoes.js';
 import * as api from './services/api.js';
 import { lerSessao, limparSessao, salvarSessao } from './services/sessao.js';
+import { lerServidor } from './services/configuracao.js';
 
 export default function App() {
   const [usuario, setUsuario] = useState(null);
@@ -68,6 +69,9 @@ export default function App() {
     api.quandoSessaoExpirar(function expirou(mensagem) { encerrarSessaoLocal(mensagem); });
     let ativo = true;
     (async function restaurar() {
+      // Primeiro o endereço da API salvo no aparelho (APK), depois a sessão.
+      const servidor = await lerServidor();
+      if (servidor) { api.definirApiUrl(servidor); }
       const salva = await lerSessao();
       if (salva) {
         api.definirToken(salva.token);
