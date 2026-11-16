@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from 'react-native';
 import { Avatar, Botao, Cartao, Icone, Pagina, estilos } from '../../components/ui/index.js';
 import { NIVEIS, PERMISSOES } from '../../constants/permissoes.js';
+import { obterApiUrl } from '../../services/api.js';
 import { cores, espaco, raio } from '../../theme/tema.js';
 
 // Descrição amigável de cada permissão da matriz (constants/permissoes.js).
@@ -47,7 +48,8 @@ export default function Perfil({ usuario, expiraEm, sair }) {
       <Text style={estilos.etiqueta}>Sessão</Text>
       <Linha icone="shield-check-outline" texto="Autenticado com token JWT (Bearer)" cor={cores.sucesso} />
       <Linha icone="clock-outline" texto={'Válida até ' + formatarValidade(expiraEm)} />
-      <Linha icone="cellphone-lock" texto="Sessão salva neste aparelho com segurança" />
+      <Linha icone="server-network" texto={'Servidor: ' + obterApiUrl()} />
+      <Linha icone="cellphone-lock" texto="Sessão salva neste aparelho (AsyncStorage)" />
     </Cartao>
 
     <Cartao>
