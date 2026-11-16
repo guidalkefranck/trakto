@@ -1,6 +1,6 @@
 {
   "name": "trakto",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "main": "index.js",
   "type": "module",
   "private": true,
@@ -15,7 +15,8 @@
     "test": "node --test backend/tests/*.test.js",
     "lint": "expo lint",
     "export:web": "expo export --platform web",
-    "test:api": "node backend/tests/api.e2e.js"
+    "test:api": "node backend/tests/api.e2e.js",
+    "apk": "eas build -p android --profile preview"
   },
   "dependencies": {
     "@expo/metro-runtime": "~58.0.15",
