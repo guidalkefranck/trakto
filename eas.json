@@ -1,6 +1,6 @@
 {
   "cli": {
-    "version": ">= 16.0.0",
+    "version": ">= 27.10.0",
     "appVersionSource": "local"
   },
   "build": {
@@ -15,5 +15,8 @@
         "buildType": "app-bundle"
       }
     }
+  },
+  "submit": {
+    "production": {}
   }
 }

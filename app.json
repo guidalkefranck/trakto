@@ -38,6 +38,11 @@
         }
       ]
     ],
-    "description": "TRAKTO — aluguel de máquinas e serviços agrícolas entre produtores do Vale do Taquari."
+    "description": "TRAKTO — aluguel de máquinas e serviços agrícolas entre produtores do Vale do Taquari.",
+    "extra": {
+      "eas": {
+        "projectId": "70fa62d5-0f2f-435d-bafe-d91c390a74a9"
+      }
+    }
   }
 }
