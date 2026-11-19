@@ -15,7 +15,8 @@
 | Organizar o código | Camadas: `screens/` por perfil, `components/ui`, `navigation/`, `constants/` (regras compartilhadas com a API), `services/`, `backend/` (routes, controllers, middlewares). |
 | Atualizar README | README com status final, execução, APK e links da documentação. |
 | Commit e push da versão final | Tag **v1.0.0** no commit usado para gerar o APK. |
-| Gerar o APK | EAS Build, perfil `preview` (seção 2). |
+| Gerar o APK | EAS Build, perfil `preview` (seção 2). Publicado em [Releases → v1.0.0](https://github.com/guidalkefranck/trakto/releases/tag/v1.0.0) (`trakto-v1.0.0.apk`, 75,6 MB). |
+| Evidências | [Vídeo do sistema funcionando](midia/trakto-demonstracao.mp4) (pedido gravado no banco, aceite e contato liberado) · [vídeo do APK no celular](midia/trakto-apk-celular.mp4) · `npm run test:api` 37/37. |
 
 ### Ajustes para o app funcionar no celular (APK)
 
@@ -72,7 +73,9 @@ Marque ✅ ao testar no **APK** (ou no navegador com `npx expo start` → `w`).
 
 ## 4. Roteiro da apresentação (≈ 10 min)
 
-Slides: https://claude.ai/artifact/V9QhZTiBBwM2Zm7s9W6Nw4 (cada slide tem notas do apresentador). Ordem sugerida, seguindo os itens de "Apresentação e defesa" do enunciado:
+Material: [PDF dos 16 slides](apresentacao/TRAKTO-apresentacao.pdf) · [roteiro com as falas de cada slide](apresentacao/ROTEIRO.md) · [slides online](https://claude.ai/artifact/V9QhZTiBBwM2Zm7s9W6Nw4).
+
+**Plano B:** se a rede da escola impedir a demonstração ao vivo, use o vídeo [docs/midia/trakto-demonstracao.mp4](midia/trakto-demonstracao.mp4) (slide 12). Ordem sugerida, seguindo os itens de "Apresentação e defesa" do enunciado:
 
 1. **Problema** (1 min) — agricultura familiar sem máquina própria × máquinas paradas; dados do IBGE e pesquisa.
 2. **Solução** (1 min) — TRAKTO conecta quem precisa com quem tem; 3 perfis.

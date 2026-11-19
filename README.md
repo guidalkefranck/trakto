@@ -11,7 +11,9 @@ Aplicação mobile (React Native + Expo) que conecta **pequenos produtores rurai
 
 > 📱 **APK (Android):** aba [Releases](https://github.com/guidalkefranck/trakto/releases) → versão **v1.0.0** · instalação e conexão em [docs/ENTREGA4.md](docs/ENTREGA4.md#2-gerando-o-apk)
 >
-> 🎤 **Slides da apresentação:** https://claude.ai/artifact/V9QhZTiBBwM2Zm7s9W6Nw4 · roteiro e perguntas da defesa em [docs/ENTREGA4.md](docs/ENTREGA4.md#4-roteiro-da-apresentação--10-min)
+> 🎤 **Apresentação:** [PDF dos slides](docs/apresentacao/TRAKTO-apresentacao.pdf) · [roteiro com as notas de cada slide](docs/apresentacao/ROTEIRO.md) · [slides online](https://claude.ai/artifact/V9QhZTiBBwM2Zm7s9W6Nw4) · perguntas da defesa em [docs/ENTREGA4.md](docs/ENTREGA4.md#5-perguntas-prováveis-na-defesa)
+>
+> 🎬 **Vídeos:** [TRAKTO funcionando (app → API → MySQL, 2 min)](docs/midia/trakto-demonstracao.mp4) · [APK instalado no celular](docs/midia/trakto-apk-celular.mp4)
 >
 > 📄 **Documento completo da proposta** — personas, requisitos funcionais e não funcionais, regras de negócio, modelo de dados e rotas da API: **[docs/PROPOSTA.md](docs/PROPOSTA.md)**
 
