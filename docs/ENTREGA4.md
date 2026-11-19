@@ -27,10 +27,11 @@
 Pré-requisito: conta gratuita em [expo.dev](https://expo.dev).
 
 ```bash
-npm install -g eas-cli
-eas login
-npm run apk            # = eas build -p android --profile preview
+npx eas-cli@latest login
+npm run apk            # = npx eas-cli@latest build -p android --profile preview
 ```
+
+> Usamos `npx` porque nos computadores do laboratório o `npm install -g eas-cli` não coloca o comando `eas` no PATH.
 
 - Na primeira vez o EAS pergunta se deve criar o projeto e a chave de assinatura: responda **Yes** às duas.
 - O build roda na nuvem da Expo (10 a 30 min). No fim aparece um **link e um QR Code** para baixar o `.apk`.

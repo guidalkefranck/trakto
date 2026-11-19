@@ -16,7 +16,7 @@
     "lint": "expo lint",
     "export:web": "expo export --platform web",
     "test:api": "node backend/tests/api.e2e.js",
-    "apk": "eas build -p android --profile preview"
+    "apk": "npx eas-cli@latest build -p android --profile preview"
   },
   "dependencies": {
     "@expo/metro-runtime": "~58.0.15",
